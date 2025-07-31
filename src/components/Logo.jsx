@@ -67,7 +67,7 @@ const Logo = ({ size = 'medium', showText = true, className = '' }) => {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
         >
-          ProductivePro
+          ApplyWizz
         </motion.span>
       )}
     </motion.div>
