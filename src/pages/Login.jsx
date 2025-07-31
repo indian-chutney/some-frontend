@@ -5,6 +5,102 @@ import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import Logo from '../components/Logo';
 import { colors, fonts, spacing } from '../utils/theme';
 
+// Background pattern component for album covers
+const AlbumCoverPattern = () => {
+  const covers = Array.from({ length: 20 }, (_, i) => ({
+    id: i,
+    size: Math.random() * 60 + 40,
+    x: Math.random() * 100,
+    y: Math.random() * 100,
+    rotation: Math.random() * 360,
+    opacity: Math.random() * 0.1 + 0.05,
+  }));
+
+  return (
+    <div style={{
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      width: '100%',
+      height: '100%',
+      overflow: 'hidden',
+      zIndex: 1,
+    }}>
+      {covers.map((cover) => (
+        <motion.div
+          key={cover.id}
+          style={{
+            position: 'absolute',
+            left: `${cover.x}%`,
+            top: `${cover.y}%`,
+            width: `${cover.size}px`,
+            height: `${cover.size}px`,
+            backgroundColor: colors.primary,
+            borderRadius: '8px',
+            opacity: cover.opacity,
+            transform: `rotate(${cover.rotation}deg)`,
+          }}
+          animate={{
+            rotate: [cover.rotation, cover.rotation + 360],
+            scale: [1, 1.1, 1],
+          }}
+          transition={{
+            duration: 20 + Math.random() * 10,
+            repeat: Infinity,
+            ease: 'linear',
+          }}
+        />
+      ))}
+    </div>
+  );
+};
+
+// Diamond logo pattern component
+const DiamondLogo = () => {
+  return (
+    <motion.div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: spacing.xl,
+      }}
+      initial={{ opacity: 0, scale: 0.8 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.6, delay: 0.2 }}
+    >
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(3, 12px)',
+        gridTemplateRows: 'repeat(3, 12px)',
+        gap: '4px',
+        padding: spacing.md,
+      }}>
+        {Array.from({ length: 9 }, (_, i) => (
+          <motion.div
+            key={i}
+            style={{
+              width: '12px',
+              height: '12px',
+              backgroundColor: i === 4 ? colors.secondary : colors.primary,
+              borderRadius: '2px',
+              transform: 'rotate(45deg)',
+            }}
+            initial={{ opacity: 0, scale: 0 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{
+              duration: 0.3,
+              delay: 0.4 + i * 0.1,
+              type: 'spring',
+              bounce: 0.3,
+            }}
+          />
+        ))}
+      </div>
+    </motion.div>
+  );
+};
+
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -26,13 +122,17 @@ const Login = () => {
   return (
     <div style={{
       minHeight: '100vh',
-      background: `linear-gradient(135deg, ${colors.background} 0%, ${colors.surface} 100%)`,
+      backgroundColor: colors.background,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       padding: spacing.lg,
       fontFamily: fonts.body,
+      position: 'relative',
     }}>
+      {/* Album covers background pattern */}
+      <AlbumCoverPattern />
+      
       <motion.div
         style={{
           width: '100%',
@@ -42,27 +142,30 @@ const Login = () => {
           borderRadius: '24px',
           border: `1px solid ${colors.surfaceLight}`,
           boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.8)',
+          position: 'relative',
+          zIndex: 10,
         }}
         initial={{ opacity: 0, y: 20, scale: 0.95 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.6, ease: 'easeOut' }}
       >
-        {/* Logo and Title */}
+        {/* Diamond Logo Pattern */}
+        <DiamondLogo />
+        
+        {/* Title */}
         <motion.div 
           style={{ textAlign: 'center', marginBottom: spacing['2xl'] }}
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
         >
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: spacing.xl }}>
-            <Logo size="large" />
-          </div>
           <h1 style={{
             fontSize: '1.8rem',
             fontWeight: '700',
             color: colors.textPrimary,
             margin: 0,
             marginBottom: spacing.sm,
+            fontFamily: fonts.logo,
           }}>
             Welcome Back
           </h1>
@@ -71,7 +174,7 @@ const Login = () => {
             fontSize: '0.95rem',
             margin: 0,
           }}>
-            Sign in to continue your productivity journey
+            Sign in to continue your journey
           </p>
         </motion.div>
 
@@ -210,8 +313,8 @@ const Login = () => {
             style={{
               width: '100%',
               padding: spacing.lg,
-              backgroundColor: colors.primary,
-              color: colors.textPrimary,
+              backgroundColor: colors.textPrimary,
+              color: colors.background,
               border: 'none',
               borderRadius: '12px',
               fontSize: '1rem',
@@ -221,7 +324,7 @@ const Login = () => {
               opacity: isLoading ? 0.7 : 1,
               transition: 'all 0.2s ease',
             }}
-            whileHover={!isLoading ? { backgroundColor: colors.primaryDark } : {}}
+            whileHover={!isLoading ? { backgroundColor: '#f5f5f5' } : {}}
             whileTap={!isLoading ? { scale: 0.98 } : {}}
           >
             {isLoading ? (
@@ -234,17 +337,17 @@ const Login = () => {
                   style={{
                     width: '16px',
                     height: '16px',
-                    border: `2px solid ${colors.textPrimary}`,
+                    border: `2px solid ${colors.background}`,
                     borderTop: '2px solid transparent',
                     borderRadius: '50%',
                   }}
                   animate={{ rotate: 360 }}
                   transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
                 />
-                Signing In...
+                Logging In...
               </motion.div>
             ) : (
-              'Sign In'
+              'Log In'
             )}
           </motion.button>
         </motion.form>
@@ -261,7 +364,7 @@ const Login = () => {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.5 }}
         >
-          Don't have an account? <span style={{ color: colors.primary, cursor: 'pointer' }}>Sign up</span>
+          <span style={{ color: colors.primary, cursor: 'pointer' }}>Forgot your password?</span>
         </motion.div>
       </motion.div>
     </div>

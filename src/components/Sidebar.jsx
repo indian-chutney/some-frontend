@@ -105,7 +105,7 @@ const Sidebar = () => {
         fontSize: '0.8rem',
         fontFamily: fonts.body,
       }}>
-        <p>© 2024 ProductivePro</p>
+        <p>© 2024 ApplyWizz</p>
         <p style={{ opacity: 0.7 }}>v1.0.0</p>
       </div>
     </motion.div>
