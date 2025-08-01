@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { User, Check, ArrowRight, Shuffle } from 'lucide-react';
+import { User, Check, ArrowRight, Shuffle, Palette, Star } from 'lucide-react';
+import { Button } from '../components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
 import { colors, fonts, spacing } from '../utils/theme';
 
 type AvatarPattern = 'dots' | 'stripes' | 'waves' | 'gradient' | 'solid';
@@ -156,194 +158,330 @@ const AvatarSelection: React.FC = () => {
       padding: spacing.lg,
       fontFamily: fonts.body,
     }}>
-      <motion.div
-        style={{
-          width: '100%',
-          maxWidth: '800px',
-          textAlign: 'center',
-        }}
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
-      >
-        {/* Header */}
+      <div style={{
+        width: '100%',
+        maxWidth: '1200px',
+        display: 'grid',
+        gridTemplateColumns: window.innerWidth >= 1024 ? '1fr 400px' : '1fr',
+        gap: spacing['3xl'],
+        alignItems: 'start',
+      }}>
+        {/* Left Column - Avatar Selection */}
         <motion.div
-          style={{ marginBottom: spacing['3xl'] }}
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
+          initial={{ opacity: 0, x: -50 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.8 }}
         >
-          <h1 style={{
-            fontSize: '2.5rem',
-            fontWeight: '800',
-            color: colors.textPrimary,
-            margin: 0,
-            marginBottom: spacing.md,
-            background: `linear-gradient(135deg, ${colors.textPrimary} 0%, ${colors.primaryLight} 100%)`,
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-          }}>
-            Choose Your Avatar
-          </h1>
-          <p style={{
-            fontSize: '1.1rem',
-            color: colors.textSecondary,
-            margin: 0,
-            lineHeight: 1.6,
-          }}>
-            Pick an avatar that represents you, or let us surprise you!
-          </p>
-        </motion.div>
-
-        {/* Randomize Button */}
-        <motion.div
-          style={{ marginBottom: spacing['2xl'] }}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-        >
-          <motion.button
-            onClick={handleRandomize}
-            disabled={isRandomizing}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: spacing.sm,
-              margin: '0 auto',
-              padding: `${spacing.md} ${spacing.xl}`,
-              backgroundColor: colors.surfaceLight,
-              color: colors.textSecondary,
-              border: `1px solid ${colors.surfaceLight}`,
-              borderRadius: '12px',
-              fontSize: '0.9rem',
-              fontWeight: '500',
-              fontFamily: fonts.body,
-              cursor: isRandomizing ? 'not-allowed' : 'pointer',
-              opacity: isRandomizing ? 0.7 : 1,
-            }}
-            whileHover={!isRandomizing ? { backgroundColor: colors.surface, borderColor: colors.primary } : {}}
-            whileTap={!isRandomizing ? { scale: 0.95 } : {}}
+          {/* Header */}
+          <motion.div
+            style={{ marginBottom: spacing['2xl'] }}
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
           >
-            <motion.div
-              animate={isRandomizing ? { rotate: 360 } : {}}
-              transition={isRandomizing ? { duration: 0.5, repeat: Infinity, ease: 'linear' } : {}}
+            <h1 style={{
+              fontSize: '2.5rem',
+              fontWeight: '800',
+              color: colors.textPrimary,
+              margin: 0,
+              marginBottom: spacing.md,
+              background: `linear-gradient(135deg, ${colors.textPrimary} 0%, ${colors.primaryLight} 100%)`,
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              fontFamily: fonts.logo,
+            }}>
+              Choose Your Avatar
+            </h1>
+            <p style={{
+              fontSize: '1.1rem',
+              color: colors.textSecondary,
+              margin: 0,
+              lineHeight: 1.6,
+            }}>
+              Pick an avatar that represents you, or let us surprise you!
+            </p>
+          </motion.div>
+
+          {/* Randomize Button */}
+          <motion.div
+            style={{ marginBottom: spacing['2xl'] }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+          >
+            <Button
+              onClick={handleRandomize}
+              disabled={isRandomizing}
+              variant="outline"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: spacing.sm,
+              }}
             >
-              <Shuffle size={16} />
-            </motion.div>
-            {isRandomizing ? 'Randomizing...' : 'Surprise Me!'}
-          </motion.button>
+              <motion.div
+                animate={isRandomizing ? { rotate: 360 } : {}}
+                transition={isRandomizing ? { duration: 0.5, repeat: Infinity, ease: 'linear' } : {}}
+              >
+                <Shuffle size={16} />
+              </motion.div>
+              {isRandomizing ? 'Randomizing...' : 'Surprise Me!'}
+            </Button>
+          </motion.div>
+
+          {/* Avatar Grid */}
+          <motion.div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: window.innerWidth >= 768 ? 'repeat(auto-fit, minmax(120px, 1fr))' : 'repeat(3, 1fr)',
+              gap: window.innerWidth >= 768 ? spacing.lg : spacing.md,
+              marginBottom: spacing['2xl'],
+            }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+          >
+            {avatarData.map((avatar) => (
+              <AvatarIcon
+                key={avatar.id}
+                avatar={avatar}
+                isSelected={selectedAvatar?.id === avatar.id}
+                onClick={() => setSelectedAvatar(avatar)}
+              />
+            ))}
+          </motion.div>
         </motion.div>
 
-        {/* Avatar Grid */}
+        {/* Right Column - Preview & Continue */}
         <motion.div
           style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
-            gap: spacing.xl,
-            marginBottom: spacing['3xl'],
-            justifyItems: 'center',
+            position: 'sticky',
+            top: spacing.xl,
           }}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.8, delay: 0.4 }}
+          initial={{ opacity: 0, x: 50 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.8, delay: 0.2 }}
         >
-          {avatarData.map((avatar) => (
-            <AvatarIcon
-              key={avatar.id}
-              avatar={avatar}
-              isSelected={selectedAvatar?.id === avatar.id}
-              onClick={() => setSelectedAvatar(avatar)}
-            />
-          ))}
-        </motion.div>
-
-        {/* Continue Button */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.6 }}
-        >
-          <motion.button
-            onClick={handleContinue}
-            disabled={!selectedAvatar}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: spacing.md,
-              margin: '0 auto',
-              padding: `${spacing.lg} ${spacing['2xl']}`,
-              backgroundColor: selectedAvatar ? colors.primary : colors.surfaceLight,
-              color: selectedAvatar ? colors.textPrimary : colors.textMuted,
-              border: 'none',
-              borderRadius: '16px',
-              fontSize: '1.1rem',
-              fontWeight: '600',
-              fontFamily: fonts.body,
-              cursor: selectedAvatar ? 'pointer' : 'not-allowed',
-              opacity: selectedAvatar ? 1 : 0.5,
-              transition: 'all 0.3s ease',
-            }}
-            whileHover={selectedAvatar ? { 
-              backgroundColor: colors.primaryDark,
-              scale: 1.05,
-            } : {}}
-            whileTap={selectedAvatar ? { scale: 0.95 } : {}}
-          >
-            <span>Continue to Dashboard</span>
-            {selectedAvatar && (
+          <Card style={{ padding: spacing['2xl'] }}>
+            <CardHeader style={{ textAlign: 'center' }}>
+              <CardTitle style={{ 
+                fontSize: '1.5rem', 
+                marginBottom: spacing.md,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: spacing.sm,
+              }}>
+                <Palette size={24} style={{ color: colors.primary }} />
+                Avatar Preview
+              </CardTitle>
+              <CardDescription style={{ fontSize: '1rem' }}>
+                {selectedAvatar ? 'Great choice! This avatar will represent you.' : 'Select an avatar to see preview'}
+              </CardDescription>
+            </CardHeader>
+            
+            <CardContent style={{ textAlign: 'center' }}>
+              {/* Avatar Preview */}
               <motion.div
-                animate={{ x: [0, 4, 0] }}
-                transition={{
-                  duration: 1.5,
-                  repeat: Infinity,
-                  ease: 'easeInOut',
+                style={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  marginBottom: spacing.xl,
+                }}
+                key={selectedAvatar?.id || 'empty'}
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.5 }}
+              >
+                {selectedAvatar ? (
+                  <div style={{
+                    width: '160px',
+                    height: '160px',
+                    borderRadius: '50%',
+                    backgroundColor: selectedAvatar.color,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    border: `4px solid ${colors.primary}`,
+                    boxShadow: `0 8px 32px ${selectedAvatar.color}40`,
+                    ...(() => {
+                      const getPatternStyle = (): React.CSSProperties => {
+                        switch (selectedAvatar.pattern) {
+                          case 'dots':
+                            return {
+                              backgroundImage: `radial-gradient(circle at 25% 25%, ${selectedAvatar.accent}40 2px, transparent 2px), radial-gradient(circle at 75% 75%, ${selectedAvatar.accent}40 2px, transparent 2px)`,
+                              backgroundSize: '20px 20px',
+                            };
+                          case 'stripes':
+                            return {
+                              backgroundImage: `linear-gradient(45deg, ${selectedAvatar.accent}20 25%, transparent 25%, transparent 75%, ${selectedAvatar.accent}20 75%)`,
+                              backgroundSize: '16px 16px',
+                            };
+                          case 'waves':
+                            return {
+                              backgroundImage: `repeating-linear-gradient(45deg, ${selectedAvatar.accent}20, ${selectedAvatar.accent}20 4px, transparent 4px, transparent 12px)`,
+                            };
+                          case 'gradient':
+                            return {
+                              background: `linear-gradient(135deg, ${selectedAvatar.color} 0%, ${selectedAvatar.accent} 100%)`,
+                            };
+                          default:
+                            return {};
+                        }
+                      };
+                      return getPatternStyle();
+                    })(),
+                  }}>
+                    <User 
+                      size={60} 
+                      style={{ 
+                        color: colors.textPrimary, 
+                        filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))',
+                        zIndex: 2,
+                      }}
+                    />
+                    <motion.div
+                      style={{
+                        position: 'absolute',
+                        top: '12px',
+                        right: '12px',
+                        width: '24px',
+                        height: '24px',
+                        backgroundColor: colors.success,
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: 3,
+                        border: `2px solid ${colors.surface}`,
+                      }}
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: 'spring', bounce: 0.5 }}
+                    >
+                      <Star size={12} style={{ color: colors.textPrimary }} />
+                    </motion.div>
+                  </div>
+                ) : (
+                  <div style={{
+                    width: '160px',
+                    height: '160px',
+                    borderRadius: '50%',
+                    backgroundColor: colors.surfaceLight,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    border: `2px dashed ${colors.surfaceLight}`,
+                  }}>
+                    <User 
+                      size={60} 
+                      style={{ color: colors.textMuted }}
+                    />
+                  </div>
+                )}
+              </motion.div>
+
+              {/* Avatar Details */}
+              {selectedAvatar && (
+                <motion.div
+                  style={{
+                    marginBottom: spacing.xl,
+                    padding: spacing.md,
+                    backgroundColor: `${colors.surfaceLight}40`,
+                    borderRadius: '8px',
+                  }}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <p style={{
+                    fontSize: '0.9rem',
+                    color: colors.textSecondary,
+                    margin: 0,
+                    marginBottom: spacing.xs,
+                  }}>
+                    Pattern: <span style={{ color: colors.primary, fontWeight: '600' }}>{selectedAvatar.pattern}</span>
+                  </p>
+                  <p style={{
+                    fontSize: '0.9rem',
+                    color: colors.textSecondary,
+                    margin: 0,
+                  }}>
+                    Style: <span style={{ color: colors.primary, fontWeight: '600' }}>Custom #{selectedAvatar.id}</span>
+                  </p>
+                </motion.div>
+              )}
+
+              {/* Continue Button */}
+              <Button
+                onClick={handleContinue}
+                disabled={!selectedAvatar}
+                size="lg"
+                style={{
+                  width: '100%',
+                  fontSize: '1.1rem',
+                  marginBottom: spacing.lg,
                 }}
               >
-                <ArrowRight size={20} />
+                <span>Continue to Dashboard</span>
+                {selectedAvatar && (
+                  <motion.div
+                    animate={{ x: [0, 4, 0] }}
+                    transition={{
+                      duration: 1.5,
+                      repeat: Infinity,
+                      ease: 'easeInOut',
+                    }}
+                  >
+                    <ArrowRight size={20} />
+                  </motion.div>
+                )}
+              </Button>
+
+              {/* Progress indicator */}
+              <motion.div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  gap: spacing.sm,
+                  marginBottom: spacing.md,
+                }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.8, delay: 0.8 }}
+              >
+                {[0, 1, 2].map((step) => (
+                  <motion.div
+                    key={step}
+                    style={{
+                      width: step === 1 ? '32px' : '8px',
+                      height: '8px',
+                      backgroundColor: step <= 1 ? colors.primary : colors.surfaceLight,
+                      borderRadius: '4px',
+                    }}
+                  />
+                ))}
               </motion.div>
-            )}
-          </motion.button>
-        </motion.div>
 
-        {/* Progress indicator */}
-        <motion.div
-          style={{
-            marginTop: spacing['2xl'],
-            display: 'flex',
-            justifyContent: 'center',
-            gap: spacing.sm,
-          }}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.8, delay: 0.8 }}
-        >
-          {[0, 1, 2].map((step) => (
-            <motion.div
-              key={step}
-              style={{
-                width: step === 1 ? '32px' : '8px',
-                height: '8px',
-                backgroundColor: step <= 1 ? colors.primary : colors.surfaceLight,
-                borderRadius: '4px',
-              }}
-            />
-          ))}
+              <motion.p
+                style={{
+                  color: colors.textMuted,
+                  fontSize: '0.85rem',
+                  margin: 0,
+                }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.8, delay: 0.9 }}
+              >
+                Step 2 of 3 - Avatar Selection
+              </motion.p>
+            </CardContent>
+          </Card>
         </motion.div>
-
-        <motion.p
-          style={{
-            marginTop: spacing.md,
-            color: colors.textMuted,
-            fontSize: '0.85rem',
-          }}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.8, delay: 0.9 }}
-        >
-          Step 2 of 3 - Avatar Selection
-        </motion.p>
-      </motion.div>
+      </div>
     </div>
   );
 };
