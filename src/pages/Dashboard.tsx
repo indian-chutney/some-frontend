@@ -431,9 +431,9 @@ const Dashboard: React.FC = () => {
         marginLeft: window.innerWidth >= 1024 ? '280px' : '0',
         position: 'relative',
       }}>
-        {/* Hero Section */}
+        {/* Hero Section - Full Height */}
         <div style={{
-          minHeight: '100vh',
+          height: '100vh',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -527,7 +527,7 @@ const Dashboard: React.FC = () => {
           </motion.div>
         </div>
 
-        {/* Progress Section */}
+        {/* Progress Section - Separate scrollable area */}
         <motion.div
           style={{
             y: progressY,
@@ -536,6 +536,7 @@ const Dashboard: React.FC = () => {
             backgroundColor: colors.background,
             position: 'relative',
             zIndex: 10,
+            minHeight: '100vh',
           }}
         >
           <motion.div
@@ -588,47 +589,6 @@ const Dashboard: React.FC = () => {
               />
             ))}
           </div>
-
-          {/* Progress indicator */}
-          <motion.div
-            style={{
-              display: 'flex',
-              justifyContent: 'center',
-              gap: spacing.sm,
-              marginTop: spacing['2xl'],
-            }}
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.5 }}
-            viewport={{ once: true }}
-          >
-            {[0, 1, 2].map((step) => (
-              <motion.div
-                key={step}
-                style={{
-                  width: step === 2 ? '32px' : '8px',
-                  height: '8px',
-                  backgroundColor: step === 2 ? colors.primary : colors.surfaceLight,
-                  borderRadius: '4px',
-                }}
-              />
-            ))}
-          </motion.div>
-
-          <motion.p
-            style={{
-              marginTop: spacing.md,
-              color: colors.textMuted,
-              fontSize: '0.85rem',
-              textAlign: 'center',
-            }}
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.6 }}
-            viewport={{ once: true }}
-          >
-            Step 3 of 3 - Dashboard Overview
-          </motion.p>
         </motion.div>
       </main>
     </div>

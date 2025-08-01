@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Construction, User } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import Sidebar from '../components/Sidebar';
 import { Card } from '../components/ui/card';
 import { colors, fonts, spacing } from '../utils/theme';
@@ -32,7 +33,7 @@ const UnderConstruction: React.FC<UnderConstructionProps> = ({ title, descriptio
       
       <main style={{
         flex: 1,
-        marginLeft: '280px',
+        marginLeft: window.innerWidth >= 1024 ? '280px' : '0',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -144,16 +145,92 @@ const UnderConstruction: React.FC<UnderConstructionProps> = ({ title, descriptio
 // Settings Component
 export const Settings: React.FC = () => {
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
+  const [selectedTimeRange, setSelectedTimeRange] = useState<string>('30days');
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  // Mock data for daily task completion graph
-  const taskData = [
-    { date: 'Mon', tasks: 8 },
-    { date: 'Tue', tasks: 12 },
-    { date: 'Wed', tasks: 6 },
-    { date: 'Thu', tasks: 15 },
-    { date: 'Fri', tasks: 10 },
-    { date: 'Sat', tasks: 4 },
-    { date: 'Sun', tasks: 7 },
+  // Enhanced mock data for historical progress
+  const generateHistoricalData = (range: string) => {
+    const now = new Date();
+    let data = [];
+    
+    switch (range) {
+      case '30days':
+        for (let i = 29; i >= 0; i--) {
+          const date = new Date(now);
+          date.setDate(date.getDate() - i);
+          data.push({
+            date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+            fullDate: date.toISOString().split('T')[0],
+            tasks: Math.floor(Math.random() * 15) + 5,
+            productivity: Math.floor(Math.random() * 40) + 60,
+            focus: Math.floor(Math.random() * 8) + 4,
+          });
+        }
+        break;
+      case '3months':
+        for (let i = 11; i >= 0; i--) {
+          const date = new Date(now);
+          date.setMonth(date.getMonth() - i);
+          data.push({
+            date: date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
+            fullDate: date.toISOString().split('T')[0],
+            tasks: Math.floor(Math.random() * 300) + 200,
+            productivity: Math.floor(Math.random() * 40) + 60,
+            focus: Math.floor(Math.random() * 200) + 120,
+          });
+        }
+        break;
+      case '6months':
+        for (let i = 5; i >= 0; i--) {
+          const date = new Date(now);
+          date.setMonth(date.getMonth() - i);
+          data.push({
+            date: date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
+            fullDate: date.toISOString().split('T')[0],
+            tasks: Math.floor(Math.random() * 600) + 400,
+            productivity: Math.floor(Math.random() * 40) + 60,
+            focus: Math.floor(Math.random() * 400) + 250,
+          });
+        }
+        break;
+      case '1year':
+        for (let i = 11; i >= 0; i--) {
+          const date = new Date(now);
+          date.setMonth(date.getMonth() - i);
+          data.push({
+            date: date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
+            fullDate: date.toISOString().split('T')[0],
+            tasks: Math.floor(Math.random() * 1200) + 800,
+            productivity: Math.floor(Math.random() * 40) + 60,
+            focus: Math.floor(Math.random() * 800) + 500,
+          });
+        }
+        break;
+      default:
+        data = [];
+    }
+    
+    return data;
+  };
+
+  const [chartData, setChartData] = useState(generateHistoricalData(selectedTimeRange));
+
+  const handleTimeRangeChange = (range: string) => {
+    setIsLoading(true);
+    setSelectedTimeRange(range);
+    
+    // Simulate API call delay
+    setTimeout(() => {
+      setChartData(generateHistoricalData(range));
+      setIsLoading(false);
+    }, 500);
+  };
+
+  const timeRangeOptions = [
+    { value: '30days', label: 'Last 30 Days' },
+    { value: '3months', label: 'Last 3 Months' },
+    { value: '6months', label: 'Last 6 Months' },
+    { value: '1year', label: 'Last Year' },
   ];
 
   return (
@@ -167,7 +244,7 @@ export const Settings: React.FC = () => {
       
       <main style={{
         flex: 1,
-        marginLeft: '280px',
+        marginLeft: window.innerWidth >= 1024 ? '280px' : '0',
         padding: spacing['2xl'],
         display: 'flex',
         justifyContent: 'center',
@@ -175,7 +252,7 @@ export const Settings: React.FC = () => {
         <motion.div
           style={{
             width: '100%',
-            maxWidth: '600px',
+            maxWidth: '900px',
           }}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -262,80 +339,193 @@ export const Settings: React.FC = () => {
                 john.doe@applywizz.com
               </p>
             </motion.div>
+          </Card>
 
-            {/* Daily Task Completion Graph */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.4 }}
-            >
+          {/* Progress Chart Section */}
+          <Card style={{ 
+            padding: spacing['2xl'], 
+            marginBottom: spacing.xl,
+          }}>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: spacing.xl,
+              flexWrap: 'wrap',
+              gap: spacing.md,
+            }}>
               <h3 style={{
-                fontSize: '1.25rem',
-                fontWeight: '600',
+                fontSize: '1.5rem',
+                fontWeight: '700',
                 color: colors.textPrimary,
-                marginBottom: spacing.lg,
+                margin: 0,
               }}>
-                Daily Task Completions
+                Progress Overview
               </h3>
               
+              {/* Time Range Selector */}
               <div style={{
                 display: 'flex',
-                alignItems: 'end',
-                justifyContent: 'center',
-                gap: spacing.md,
-                height: '150px',
-                marginBottom: spacing.lg,
+                gap: spacing.sm,
+                flexWrap: 'wrap',
               }}>
-                {taskData.map((day, index) => (
-                  <motion.div
-                    key={day.date}
+                {timeRangeOptions.map((option) => (
+                  <motion.button
+                    key={option.value}
+                    onClick={() => handleTimeRangeChange(option.value)}
+                    disabled={isLoading}
                     style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      gap: spacing.sm,
+                      padding: `${spacing.sm} ${spacing.md}`,
+                      borderRadius: '8px',
+                      border: 'none',
+                      backgroundColor: selectedTimeRange === option.value ? colors.primary : colors.surfaceLight,
+                      color: selectedTimeRange === option.value ? colors.textPrimary : colors.textSecondary,
+                      fontSize: '0.85rem',
+                      fontWeight: '600',
+                      cursor: isLoading ? 'not-allowed' : 'pointer',
+                      opacity: isLoading ? 0.6 : 1,
+                      transition: 'all 0.2s ease',
                     }}
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    transition={{ duration: 0.5, delay: 0.5 + index * 0.1 }}
+                    whileHover={!isLoading ? {
+                      backgroundColor: selectedTimeRange === option.value ? colors.primaryDark : colors.surface,
+                    } : {}}
+                    whileTap={!isLoading ? { scale: 0.95 } : {}}
                   >
-                    <div
-                      style={{
-                        fontSize: '0.75rem',
-                        color: colors.textMuted,
-                        fontWeight: '500',
-                      }}
-                    >
-                      {day.tasks}
-                    </div>
-                    <motion.div
-                      style={{
-                        width: '24px',
-                        backgroundColor: colors.primary,
-                        borderRadius: '4px 4px 0 0',
-                        position: 'relative',
-                      }}
-                      initial={{ height: 0 }}
-                      animate={{ height: `${(day.tasks / 15) * 100}px` }}
-                      transition={{ duration: 0.8, delay: 0.6 + index * 0.1 }}
-                      whileHover={{
-                        backgroundColor: colors.primaryLight,
-                        scale: 1.1,
-                      }}
-                    />
-                    <div
-                      style={{
-                        fontSize: '0.75rem',
-                        color: colors.textSecondary,
-                        fontWeight: '500',
-                      }}
-                    >
-                      {day.date}
-                    </div>
-                  </motion.div>
+                    {option.label}
+                  </motion.button>
                 ))}
               </div>
+            </div>
+
+            {/* Chart Container */}
+            <motion.div
+              style={{
+                height: '400px',
+                width: '100%',
+                position: 'relative',
+                opacity: isLoading ? 0.5 : 1,
+                transition: 'opacity 0.3s ease',
+              }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: isLoading ? 0.5 : 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+            >
+              {isLoading && (
+                <div style={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  zIndex: 10,
+                }}>
+                  <motion.div
+                    style={{
+                      width: '32px',
+                      height: '32px',
+                      border: `3px solid ${colors.surfaceLight}`,
+                      borderTop: `3px solid ${colors.primary}`,
+                      borderRadius: '50%',
+                    }}
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                  />
+                </div>
+              )}
+              
+              <LineChart
+                width={window.innerWidth >= 768 ? 800 : 300}
+                height={400}
+                data={chartData}
+                margin={{
+                  top: 20,
+                  right: 30,
+                  left: 20,
+                  bottom: 20,
+                }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke={colors.surfaceLight} />
+                <XAxis 
+                  dataKey="date" 
+                  stroke={colors.textSecondary}
+                  fontSize={12}
+                />
+                <YAxis 
+                  stroke={colors.textSecondary}
+                  fontSize={12}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: colors.surface,
+                    border: `1px solid ${colors.surfaceLight}`,
+                    borderRadius: '8px',
+                    color: colors.textPrimary,
+                    fontSize: '0.875rem',
+                  }}
+                  labelStyle={{ color: colors.textSecondary }}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="tasks" 
+                  stroke={colors.primary}
+                  strokeWidth={3}
+                  dot={{ fill: colors.primary, strokeWidth: 2, r: 4 }}
+                  activeDot={{ r: 6, fill: colors.primaryLight }}
+                  name="Tasks Completed"
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="productivity" 
+                  stroke={colors.secondary}
+                  strokeWidth={2}
+                  dot={{ fill: colors.secondary, strokeWidth: 2, r: 3 }}
+                  activeDot={{ r: 5, fill: colors.secondaryLight }}
+                  name="Productivity %"
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="focus" 
+                  stroke={colors.success}
+                  strokeWidth={2}
+                  dot={{ fill: colors.success, strokeWidth: 2, r: 3 }}
+                  activeDot={{ r: 5, fill: '#34d399' }}
+                  name="Focus Hours"
+                />
+              </LineChart>
             </motion.div>
+
+            {/* Chart Legend */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              gap: spacing.xl,
+              marginTop: spacing.lg,
+              flexWrap: 'wrap',
+            }}>
+              {[
+                { color: colors.primary, label: 'Tasks Completed' },
+                { color: colors.secondary, label: 'Productivity %' },
+                { color: colors.success, label: 'Focus Hours' },
+              ].map((item) => (
+                <div key={item.label} style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: spacing.sm,
+                }}>
+                  <div style={{
+                    width: '12px',
+                    height: '12px',
+                    backgroundColor: item.color,
+                    borderRadius: '50%',
+                  }} />
+                  <span style={{
+                    fontSize: '0.875rem',
+                    color: colors.textSecondary,
+                  }}>
+                    {item.label}
+                  </span>
+                </div>
+              ))}
+            </div>
           </Card>
 
           {/* Settings Options */}
@@ -475,7 +665,7 @@ export const Leaderboard: React.FC = () => {
       
       <main style={{
         flex: 1,
-        marginLeft: '280px',
+        marginLeft: window.innerWidth >= 1024 ? '280px' : '0',
         padding: spacing['2xl'],
       }}>
         <motion.div
@@ -656,7 +846,7 @@ export const Spaces: React.FC = () => {
       
       <main style={{
         flex: 1,
-        marginLeft: '280px',
+        marginLeft: window.innerWidth >= 1024 ? '280px' : '0',
         padding: spacing['2xl'],
       }}>
         <motion.div
@@ -841,10 +1031,3 @@ export const Spaces: React.FC = () => {
     </div>
   );
 };
-
-export const GameEngine: React.FC = () => (
-  <UnderConstruction 
-    title="Game Engine" 
-    description="Turn your productivity into an engaging game with rewards and achievements."
-  />
-);

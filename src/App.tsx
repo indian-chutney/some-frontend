@@ -5,7 +5,7 @@ import Login from './pages/Login';
 import Welcome from './pages/Welcome';
 import AvatarSelection from './pages/AvatarSelection';
 import Dashboard from './pages/Dashboard';
-import { Settings, Leaderboard, Spaces, GameEngine } from './pages/UnderConstruction';
+import { Settings, Leaderboard, Spaces } from './pages/UnderConstruction';
 import './App.css';
 
 interface PageTransitionProps {
@@ -63,11 +63,6 @@ const App: React.FC = () => {
           <Route path="/spaces" element={
             <PageTransition>
               <Spaces />
-            </PageTransition>
-          } />
-          <Route path="/game" element={
-            <PageTransition>
-              <GameEngine />
             </PageTransition>
           } />
           <Route path="*" element={<Navigate to="/" replace />} />

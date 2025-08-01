@@ -6,9 +6,7 @@ import {
   User, 
   Settings, 
   Trophy, 
-  Gamepad2, 
   Grid3X3,
-  Construction,
   Menu,
   X,
   LucideIcon
@@ -37,7 +35,6 @@ const Sidebar: React.FC = () => {
     { id: 'settings', label: 'Settings', icon: Settings, path: '/settings' },
     { id: 'leaderboard', label: 'LeaderBoard', icon: Trophy, path: '/leaderboard' },
     { id: 'spaces', label: 'Spaces', icon: Grid3X3, path: '/spaces' },
-    { id: 'game', label: 'Game Engine', icon: Gamepad2, path: '/game' },
   ];
 
   const handleNavigate = (path: string, disabled?: boolean): void => {
@@ -149,9 +146,6 @@ const Sidebar: React.FC = () => {
               >
                 <Icon size={20} />
                 <span>{item.label}</span>
-                {item.id === 'game' && (
-                  <Construction size={16} style={{ marginLeft: 'auto', opacity: 0.6 }} />
-                )}
               </motion.button>
             );
           })}
