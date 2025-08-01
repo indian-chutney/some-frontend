@@ -428,7 +428,7 @@ const Dashboard: React.FC = () => {
       
       <main style={{
         flex: 1,
-        marginLeft: '280px',
+        marginLeft: window.innerWidth >= 1024 ? '280px' : '0',
         position: 'relative',
       }}>
         {/* Hero Section */}
@@ -438,7 +438,7 @@ const Dashboard: React.FC = () => {
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: spacing['2xl'],
+          padding: window.innerWidth >= 768 ? spacing['2xl'] : spacing.lg,
           position: 'relative',
           overflow: 'hidden',
         }}>
@@ -462,13 +462,14 @@ const Dashboard: React.FC = () => {
               textAlign: 'center',
               marginTop: spacing['3xl'],
               zIndex: 10,
+              padding: `0 ${spacing.md}`,
             }}
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 1 }}
           >
             <h1 style={{
-              fontSize: '2.5rem',
+              fontSize: window.innerWidth >= 768 ? '2.5rem' : '2rem',
               fontWeight: '800',
               color: colors.textPrimary,
               margin: 0,
@@ -481,7 +482,7 @@ const Dashboard: React.FC = () => {
               Welcome Back, Hero
             </h1>
             <p style={{
-              fontSize: '1.2rem',
+              fontSize: window.innerWidth >= 768 ? '1.2rem' : '1rem',
               color: colors.textSecondary,
               margin: 0,
               lineHeight: 1.6,
@@ -531,7 +532,7 @@ const Dashboard: React.FC = () => {
           style={{
             y: progressY,
             opacity: progressOpacity,
-            padding: spacing['2xl'],
+            padding: window.innerWidth >= 768 ? spacing['2xl'] : spacing.lg,
             backgroundColor: colors.background,
             position: 'relative',
             zIndex: 10,
@@ -548,7 +549,7 @@ const Dashboard: React.FC = () => {
             viewport={{ once: true }}
           >
             <h2 style={{
-              fontSize: '2rem',
+              fontSize: window.innerWidth >= 768 ? '2rem' : '1.5rem',
               fontWeight: '700',
               color: colors.textPrimary,
               margin: 0,
@@ -567,11 +568,12 @@ const Dashboard: React.FC = () => {
             </p>
           </motion.div>
 
-          {/* Progress Grid */}
+          {/* Progress Grid - Responsive */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-            gap: spacing.xl,
+            gridTemplateColumns: window.innerWidth >= 1024 ? 'repeat(3, 1fr)' : 
+                                 window.innerWidth >= 640 ? 'repeat(2, 1fr)' : '1fr',
+            gap: window.innerWidth >= 768 ? spacing.xl : spacing.lg,
             marginBottom: spacing['3xl'],
           }}>
             {progressData.map((item, index) => (
