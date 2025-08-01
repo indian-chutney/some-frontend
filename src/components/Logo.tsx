@@ -2,7 +2,15 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { colors, fonts } from '../utils/theme';
 
-const Logo = ({ size = 'medium', showText = true, className = '' }) => {
+type LogoSize = 'small' | 'medium' | 'large';
+
+interface LogoProps {
+  size?: LogoSize;
+  showText?: boolean;
+  className?: string;
+}
+
+const Logo: React.FC<LogoProps> = ({ size = 'medium', showText = true, className = '' }) => {
   const sizes = {
     small: { width: 32, height: 32, fontSize: '1.2rem' },
     medium: { width: 48, height: 48, fontSize: '1.5rem' },
