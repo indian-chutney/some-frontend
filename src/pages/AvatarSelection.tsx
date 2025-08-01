@@ -4,7 +4,22 @@ import { useNavigate } from 'react-router-dom';
 import { User, Check, ArrowRight, Shuffle } from 'lucide-react';
 import { colors, fonts, spacing } from '../utils/theme';
 
-const avatarData = [
+type AvatarPattern = 'dots' | 'stripes' | 'waves' | 'gradient' | 'solid';
+
+interface Avatar {
+  id: number;
+  color: string;
+  pattern: AvatarPattern;
+  accent: string;
+}
+
+interface AvatarIconProps {
+  avatar: Avatar;
+  isSelected: boolean;
+  onClick: () => void;
+}
+
+const avatarData: Avatar[] = [
   { id: 1, color: colors.primary, pattern: 'dots', accent: colors.secondary },
   { id: 2, color: colors.secondary, pattern: 'stripes', accent: colors.primary },
   { id: 3, color: colors.success, pattern: 'gradient', accent: colors.warning },
@@ -16,8 +31,8 @@ const avatarData = [
   { id: 9, color: '#f97316', pattern: 'waves', accent: colors.success },
 ];
 
-const AvatarIcon = ({ avatar, isSelected, onClick }) => {
-  const getPatternStyle = () => {
+const AvatarIcon: React.FC<AvatarIconProps> = ({ avatar, isSelected, onClick }) => {
+  const getPatternStyle = (): React.CSSProperties => {
     switch (avatar.pattern) {
       case 'dots':
         return {
@@ -101,12 +116,12 @@ const AvatarIcon = ({ avatar, isSelected, onClick }) => {
   );
 };
 
-const AvatarSelection = () => {
-  const [selectedAvatar, setSelectedAvatar] = useState(null);
-  const [isRandomizing, setIsRandomizing] = useState(false);
+const AvatarSelection: React.FC = () => {
+  const [selectedAvatar, setSelectedAvatar] = useState<Avatar | null>(null);
+  const [isRandomizing, setIsRandomizing] = useState<boolean>(false);
   const navigate = useNavigate();
 
-  const handleContinue = () => {
+  const handleContinue = (): void => {
     if (selectedAvatar) {
       // Store selected avatar in localStorage for later use
       localStorage.setItem('selectedAvatar', JSON.stringify(selectedAvatar));
@@ -114,7 +129,7 @@ const AvatarSelection = () => {
     }
   };
 
-  const handleRandomize = () => {
+  const handleRandomize = (): void => {
     setIsRandomizing(true);
     
     // Animate through random selections

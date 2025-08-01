@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
-import Logo from '../components/Logo';
 import { colors, fonts, spacing } from '../utils/theme';
 
 interface Cover {

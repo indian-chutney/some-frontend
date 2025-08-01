@@ -4,7 +4,22 @@ import { Construction } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import { colors, fonts, spacing } from '../utils/theme';
 
-const UnderConstruction = ({ title, description }) => {
+interface UnderConstructionProps {
+  title: string;
+  description: string;
+}
+
+interface LeaderboardEntry {
+  rank: number;
+  name: string;
+  score: number;
+  change: string;
+  avatar?: string;
+}
+
+type TabType = 'group' | 'individual';
+
+const UnderConstruction: React.FC<UnderConstructionProps> = ({ title, description }) => {
   return (
     <div style={{
       minHeight: '100vh',
@@ -126,8 +141,8 @@ const UnderConstruction = ({ title, description }) => {
 };
 
 // Settings Component
-export const Settings = () => {
-  const [soundEnabled, setSoundEnabled] = React.useState(true);
+export const Settings: React.FC = () => {
+  const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
 
   return (
     <div style={{
@@ -354,10 +369,10 @@ export const Settings = () => {
 };
 
 // Leaderboard Component
-export const Leaderboard = () => {
-  const [activeTab, setActiveTab] = React.useState('group');
+export const Leaderboard: React.FC = () => {
+  const [activeTab, setActiveTab] = useState<TabType>('group');
 
-  const groupLeaderboard = [
+  const groupLeaderboard: LeaderboardEntry[] = [
     { rank: 1, name: 'Team Alpha', score: 2450, change: '+12' },
     { rank: 2, name: 'Team Beta', score: 2380, change: '+8' },
     { rank: 3, name: 'Team Gamma', score: 2290, change: '-3' },
@@ -365,7 +380,7 @@ export const Leaderboard = () => {
     { rank: 5, name: 'Team Epsilon', score: 2080, change: '+2' },
   ];
 
-  const individualLeaderboard = [
+  const individualLeaderboard: LeaderboardEntry[] = [
     { rank: 1, name: 'Sarah Chen', score: 1850, change: '+25', avatar: 'SC' },
     { rank: 2, name: 'Mike Johnson', score: 1780, change: '+18', avatar: 'MJ' },
     { rank: 3, name: 'John Doe', score: 1650, change: '+12', avatar: 'JD' },
@@ -414,8 +429,8 @@ export const Leaderboard = () => {
             border: `1px solid ${colors.surfaceLight}`,
           }}>
             {[
-              { id: 'group', label: 'Group Leaderboard' },
-              { id: 'individual', label: 'Individual Leaderboard' }
+              { id: 'group' as const, label: 'Group Leaderboard' },
+              { id: 'individual' as const, label: 'Individual Leaderboard' }
             ].map((tab) => (
               <motion.button
                 key={tab.id}
@@ -553,14 +568,14 @@ export const Leaderboard = () => {
   );
 };
 
-export const Spaces = () => (
+export const Spaces: React.FC = () => (
   <UnderConstruction 
     title="Spaces" 
     description="Organize your work into dedicated spaces for better focus and collaboration."
   />
 );
 
-export const GameEngine = () => (
+export const GameEngine: React.FC = () => (
   <UnderConstruction 
     title="Game Engine" 
     description="Turn your productivity into an engaging game with rewards and achievements."
