@@ -2,12 +2,20 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
-import Logo from '../components/Logo';
 import { colors, fonts, spacing } from '../utils/theme';
 
+interface Cover {
+  id: number;
+  size: number;
+  x: number;
+  y: number;
+  rotation: number;
+  opacity: number;
+}
+
 // Background pattern component for album covers
-const AlbumCoverPattern = () => {
-  const covers = Array.from({ length: 20 }, (_, i) => ({
+const AlbumCoverPattern: React.FC = () => {
+  const covers: Cover[] = Array.from({ length: 20 }, (_, i) => ({
     id: i,
     size: Math.random() * 60 + 40,
     x: Math.random() * 100,
@@ -56,7 +64,7 @@ const AlbumCoverPattern = () => {
 };
 
 // Diamond logo pattern component
-const DiamondLogo = () => {
+const DiamondLogo: React.FC = () => {
   return (
     <motion.div
       style={{
@@ -101,14 +109,14 @@ const DiamondLogo = () => {
   );
 };
 
-const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+const Login: React.FC = () => {
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     setIsLoading(true);
     
@@ -117,6 +125,16 @@ const Login = () => {
       setIsLoading(false);
       navigate('/welcome');
     }, 1500);
+  };
+
+  const handleInputFocus = (e: React.FocusEvent<HTMLInputElement>): void => {
+    e.target.style.borderColor = colors.primary;
+    e.target.style.boxShadow = `0 0 0 3px ${colors.primary}20`;
+  };
+
+  const handleInputBlur = (e: React.FocusEvent<HTMLInputElement>): void => {
+    e.target.style.borderColor = colors.surfaceLight;
+    e.target.style.boxShadow = 'none';
   };
 
   return (
@@ -225,14 +243,8 @@ const Login = () => {
                   outline: 'none',
                   transition: 'all 0.2s ease',
                 }}
-                onFocus={(e) => {
-                  e.target.style.borderColor = colors.primary;
-                  e.target.style.boxShadow = `0 0 0 3px ${colors.primary}20`;
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = colors.surfaceLight;
-                  e.target.style.boxShadow = 'none';
-                }}
+                onFocus={handleInputFocus}
+                onBlur={handleInputBlur}
               />
             </div>
           </div>
@@ -277,14 +289,8 @@ const Login = () => {
                   outline: 'none',
                   transition: 'all 0.2s ease',
                 }}
-                onFocus={(e) => {
-                  e.target.style.borderColor = colors.primary;
-                  e.target.style.boxShadow = `0 0 0 3px ${colors.primary}20`;
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = colors.surfaceLight;
-                  e.target.style.boxShadow = 'none';
-                }}
+                onFocus={handleInputFocus}
+                onBlur={handleInputBlur}
               />
               <button
                 type="button"

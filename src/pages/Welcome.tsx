@@ -5,10 +5,10 @@ import { Sparkles, ArrowRight, User } from 'lucide-react';
 import Logo from '../components/Logo';
 import { colors, fonts, spacing } from '../utils/theme';
 
-const Welcome = () => {
+const Welcome: React.FC = () => {
   const navigate = useNavigate();
 
-  const handleContinue = () => {
+  const handleContinue = (): void => {
     navigate('/avatar');
   };
 

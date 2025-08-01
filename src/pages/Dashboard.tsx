@@ -1,10 +1,31 @@
 import React from 'react';
-import { motion, useScroll, useTransform } from 'framer-motion';
-import { Target, TrendingUp, Calendar, Clock, Trophy, Zap } from 'lucide-react';
+import { motion, useScroll, useTransform, MotionValue } from 'framer-motion';
+import { Target, TrendingUp, Calendar, Clock, Trophy, Zap, LucideIcon } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import { colors, fonts, spacing } from '../utils/theme';
 
-const ThanosCharacter = ({ scrollY }) => {
+interface ThanosCharacterProps {
+  scrollY: MotionValue<number>;
+}
+
+interface ProgressCardProps {
+  icon: LucideIcon;
+  title: string;
+  value: string;
+  subtitle: string;
+  color: string;
+  delay?: number;
+}
+
+interface ProgressDataItem {
+  icon: LucideIcon;
+  title: string;
+  value: string;
+  subtitle: string;
+  color: string;
+}
+
+const ThanosCharacter: React.FC<ThanosCharacterProps> = ({ scrollY }) => {
   const scale = useTransform(scrollY, [0, 300], [1, 0.6]);
   const y = useTransform(scrollY, [0, 300], [0, -100]);
   const opacity = useTransform(scrollY, [0, 300], [1, 0.3]);
@@ -99,48 +120,79 @@ const ThanosCharacter = ({ scrollY }) => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            boxShadow: `0 0 20px ${colors.secondary}40`,
           }}
           animate={{ 
-            rotate: [0, 10, -10, 0],
-            boxShadow: [`0 0 20px ${colors.secondary}60`, `0 0 30px ${colors.secondary}80`, `0 0 20px ${colors.secondary}60`],
+            boxShadow: [`0 0 20px ${colors.secondary}40`, `0 0 30px ${colors.secondary}60`, `0 0 20px ${colors.secondary}40`],
           }}
-          transition={{ duration: 3, repeat: Infinity }}
+          transition={{ duration: 1.5, repeat: Infinity }}
         >
           <Zap size={20} style={{ color: colors.textPrimary }} />
         </motion.div>
       </motion.div>
 
-      {/* HP Bar */}
-      <HPBar />
+      {/* Name and Title */}
+      <motion.div
+        style={{ textAlign: 'center' }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, delay: 0.5 }}
+      >
+        <h2 style={{
+          fontSize: '1.8rem',
+          fontWeight: '700',
+          color: colors.textPrimary,
+          margin: 0,
+          marginBottom: spacing.xs,
+          fontFamily: fonts.logo,
+        }}>
+          Thanos
+        </h2>
+        <p style={{
+          color: colors.textSecondary,
+          fontSize: '1rem',
+          margin: 0,
+        }}>
+          The Balancer
+        </p>
+      </motion.div>
     </motion.div>
   );
 };
 
-const HPBar = () => {
+const HPBar: React.FC = () => {
   const hp = 85;
 
   return (
     <motion.div
       style={{
-        width: '300px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: spacing.sm,
+        marginTop: spacing.xl,
+        textAlign: 'center',
       }}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.8, delay: 0.5 }}
+      transition={{ duration: 0.8, delay: 0.7 }}
     >
       <div style={{
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        fontSize: '0.9rem',
-        fontWeight: '600',
-        color: colors.textSecondary,
+        marginBottom: spacing.sm,
       }}>
-        <span>Productivity Power</span>
-        <span>{hp}/100</span>
+        <span style={{
+          color: colors.textSecondary,
+          fontSize: '0.9rem',
+          fontWeight: '600',
+        }}>
+          Power Level
+        </span>
+        <span style={{
+          color: colors.textPrimary,
+          fontSize: '1rem',
+          fontWeight: '700',
+        }}>
+          {hp}/100
+        </span>
       </div>
       
       <div style={{
@@ -148,15 +200,18 @@ const HPBar = () => {
         height: '12px',
         backgroundColor: colors.hpBackground,
         borderRadius: '6px',
-        overflow: 'hidden',
         position: 'relative',
+        overflow: 'hidden',
       }}>
         <motion.div
           style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
             height: '100%',
-            background: hp > 70 ? `linear-gradient(90deg, ${colors.hpFull}, ${colors.success})` :
-                      hp > 30 ? `linear-gradient(90deg, ${colors.hpMedium}, ${colors.warning})` :
-                      `linear-gradient(90deg, ${colors.hpLow}, ${colors.error})`,
+            backgroundColor: hp > 70 ? colors.hpFull :
+                           hp > 30 ? colors.hpMedium :
+                           colors.hpLow,
             borderRadius: '6px',
             boxShadow: hp > 70 ? `0 0 10px ${colors.hpFull}40` :
                        hp > 30 ? `0 0 10px ${colors.hpMedium}40` :
@@ -185,7 +240,7 @@ const HPBar = () => {
   );
 };
 
-const ProgressCard = ({ icon: Icon, title, value, subtitle, color, delay = 0 }) => {
+const ProgressCard: React.FC<ProgressCardProps> = ({ icon: Icon, title, value, subtitle, color, delay = 0 }) => {
   return (
     <motion.div
       style={{
@@ -219,59 +274,67 @@ const ProgressCard = ({ icon: Icon, title, value, subtitle, color, delay = 0 }) 
         display: 'flex',
         alignItems: 'flex-start',
         justifyContent: 'space-between',
-        marginBottom: spacing.md,
+        position: 'relative',
+        zIndex: 2,
       }}>
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: spacing.sm,
-        }}>
+        <div style={{ flex: 1 }}>
           <div style={{
-            width: '40px',
-            height: '40px',
-            backgroundColor: `${color}20`,
-            borderRadius: '10px',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
+            gap: spacing.md,
+            marginBottom: spacing.md,
           }}>
-            <Icon size={20} style={{ color }} />
+            <div style={{
+              width: '48px',
+              height: '48px',
+              backgroundColor: `${color}20`,
+              borderRadius: '12px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+              <Icon size={24} style={{ color }} />
+            </div>
+            
+            <h3 style={{
+              fontSize: '0.95rem',
+              fontWeight: '600',
+              color: colors.textSecondary,
+              margin: 0,
+            }}>
+              {title}
+            </h3>
           </div>
-          <span style={{
-            fontSize: '0.9rem',
-            fontWeight: '500',
-            color: colors.textSecondary,
+
+          <div style={{
+            fontSize: '2rem',
+            fontWeight: '800',
+            color: colors.textPrimary,
+            marginBottom: spacing.xs,
+            fontFamily: fonts.logo,
           }}>
-            {title}
-          </span>
+            {value}
+          </div>
+
+          <p style={{
+            fontSize: '0.85rem',
+            color: colors.textMuted,
+            margin: 0,
+          }}>
+            {subtitle}
+          </p>
         </div>
-      </div>
-
-      <div style={{
-        fontSize: '2rem',
-        fontWeight: '800',
-        color: colors.textPrimary,
-        marginBottom: spacing.xs,
-      }}>
-        {value}
-      </div>
-
-      <div style={{
-        fontSize: '0.85rem',
-        color: colors.textMuted,
-      }}>
-        {subtitle}
       </div>
     </motion.div>
   );
 };
 
-const Dashboard = () => {
+const Dashboard: React.FC = () => {
   const { scrollY } = useScroll();
   const progressY = useTransform(scrollY, [200, 500], [100, 0]);
   const progressOpacity = useTransform(scrollY, [150, 300], [0, 1]);
 
-  const progressData = [
+  const progressData: ProgressDataItem[] = [
     {
       icon: Target,
       title: 'Tasks Completed',
@@ -288,30 +351,30 @@ const Dashboard = () => {
     },
     {
       icon: Calendar,
-      title: 'Streak Days',
+      title: 'Days Streak',
       value: '15',
-      subtitle: 'Personal best!',
+      subtitle: 'Personal best: 28 days',
       color: colors.secondary,
     },
     {
       icon: Clock,
-      title: 'Focus Time',
-      value: '4.2h',
-      subtitle: 'Today\'s session',
+      title: 'Time Focused',
+      value: '6.2h',
+      subtitle: 'Target: 8 hours',
       color: colors.warning,
     },
     {
       icon: Trophy,
-      title: 'Weekly Rank',
-      value: '#3',
-      subtitle: 'In your team',
+      title: 'Achievements',
+      value: '12',
+      subtitle: '3 new this week',
       color: colors.primary,
     },
     {
       icon: Zap,
       title: 'Energy Level',
       value: '85%',
-      subtitle: 'Ready to conquer!',
+      subtitle: 'Well rested',
       color: colors.success,
     },
   ];
@@ -328,30 +391,47 @@ const Dashboard = () => {
       <main style={{
         flex: 1,
         marginLeft: '280px',
-        minHeight: '200vh', // Make it scrollable
+        position: 'relative',
       }}>
-        {/* Hero Section with Thanos */}
+        {/* Hero Section */}
         <div style={{
-          height: '100vh',
+          minHeight: '100vh',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: spacing.xl,
+          padding: spacing['2xl'],
           position: 'relative',
+          overflow: 'hidden',
         }}>
+          {/* Background gradient */}
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            background: `radial-gradient(ellipse at center, ${colors.primary}10 0%, transparent 70%)`,
+            zIndex: 1,
+          }} />
+
+          <ThanosCharacter scrollY={scrollY} />
+          <HPBar />
+
+          {/* Welcome Message */}
           <motion.div
             style={{
               textAlign: 'center',
-              marginBottom: spacing['2xl'],
+              marginTop: spacing['3xl'],
+              zIndex: 10,
             }}
-            initial={{ opacity: 0, y: -20 }}
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
+            transition={{ duration: 0.8, delay: 1 }}
           >
             <h1 style={{
-              fontSize: '3rem',
-              fontWeight: '900',
+              fontSize: '2.5rem',
+              fontWeight: '800',
               color: colors.textPrimary,
               margin: 0,
               marginBottom: spacing.md,
@@ -360,39 +440,51 @@ const Dashboard = () => {
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text',
             }}>
-              Welcome Back, Hero!
+              Welcome Back, Hero
             </h1>
             <p style={{
               fontSize: '1.2rem',
               color: colors.textSecondary,
               margin: 0,
+              lineHeight: 1.6,
             }}>
-              Your productivity journey continues...
+              Ready to balance productivity and achieve perfectly balanced goals?
             </p>
           </motion.div>
 
-          <ThanosCharacter scrollY={scrollY} />
-
+          {/* Scroll indicator */}
           <motion.div
             style={{
               position: 'absolute',
-              bottom: spacing.xl,
-              color: colors.textMuted,
-              fontSize: '0.9rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: spacing.sm,
+              bottom: spacing['2xl'],
+              left: '50%',
+              transform: 'translateX(-50%)',
             }}
-            animate={{ y: [0, -8, 0] }}
+            animate={{ y: [0, 10, 0] }}
             transition={{ duration: 2, repeat: Infinity }}
           >
-            <span>Scroll down to see your progress</span>
-            <motion.div
-              animate={{ y: [0, 4, 0] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
-            >
-              ↓
-            </motion.div>
+            <div style={{
+              width: '2px',
+              height: '40px',
+              backgroundColor: colors.primary,
+              borderRadius: '1px',
+              position: 'relative',
+              overflow: 'hidden',
+            }}>
+              <motion.div
+                style={{
+                  position: 'absolute',
+                  top: '-20px',
+                  left: 0,
+                  width: '100%',
+                  height: '20px',
+                  backgroundColor: colors.primaryLight,
+                  borderRadius: '1px',
+                }}
+                animate={{ top: ['−20px', '40px'] }}
+                transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+              />
+            </div>
           </motion.div>
         </div>
 
@@ -401,14 +493,16 @@ const Dashboard = () => {
           style={{
             y: progressY,
             opacity: progressOpacity,
-            padding: spacing.xl,
-            paddingTop: spacing['3xl'],
+            padding: spacing['2xl'],
+            backgroundColor: colors.background,
+            position: 'relative',
+            zIndex: 10,
           }}
         >
           <motion.div
             style={{
               textAlign: 'center',
-              marginBottom: spacing['2xl'],
+              marginBottom: spacing['3xl'],
             }}
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -416,34 +510,40 @@ const Dashboard = () => {
             viewport={{ once: true }}
           >
             <h2 style={{
-              fontSize: '2.5rem',
-              fontWeight: '800',
+              fontSize: '2rem',
+              fontWeight: '700',
               color: colors.textPrimary,
               margin: 0,
               marginBottom: spacing.md,
+              fontFamily: fonts.logo,
             }}>
-              Your Progress
+              Today's Progress
             </h2>
             <p style={{
-              fontSize: '1.1rem',
+              fontSize: '1rem',
               color: colors.textSecondary,
               margin: 0,
+              lineHeight: 1.6,
             }}>
-              Track your productivity achievements and maintain your momentum
+              Track your journey towards perfect balance
             </p>
           </motion.div>
 
+          {/* Progress Grid */}
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
             gap: spacing.xl,
-            maxWidth: '1200px',
-            margin: '0 auto',
+            marginBottom: spacing['3xl'],
           }}>
             {progressData.map((item, index) => (
               <ProgressCard
                 key={item.title}
-                {...item}
+                icon={item.icon}
+                title={item.title}
+                value={item.value}
+                subtitle={item.subtitle}
+                color={item.color}
                 delay={index * 0.1}
               />
             ))}
@@ -452,10 +552,10 @@ const Dashboard = () => {
           {/* Progress indicator */}
           <motion.div
             style={{
-              marginTop: spacing['3xl'],
               display: 'flex',
               justifyContent: 'center',
               gap: spacing.sm,
+              marginTop: spacing['2xl'],
             }}
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
@@ -468,7 +568,7 @@ const Dashboard = () => {
                 style={{
                   width: step === 2 ? '32px' : '8px',
                   height: '8px',
-                  backgroundColor: step <= 2 ? colors.primary : colors.surfaceLight,
+                  backgroundColor: step === 2 ? colors.primary : colors.surfaceLight,
                   borderRadius: '4px',
                 }}
               />
@@ -487,7 +587,7 @@ const Dashboard = () => {
             transition={{ duration: 0.8, delay: 0.6 }}
             viewport={{ once: true }}
           >
-            Step 3 of 3 - Dashboard Complete
+            Step 3 of 3 - Dashboard Overview
           </motion.p>
         </motion.div>
       </main>

@@ -8,16 +8,25 @@ import {
   Trophy, 
   Gamepad2, 
   Grid3X3,
-  Construction
+  Construction,
+  LucideIcon
 } from 'lucide-react';
 import Logo from './Logo';
 import { colors, fonts, spacing } from '../utils/theme';
 
-const Sidebar = () => {
+interface NavigationItem {
+  id: string;
+  label: string;
+  icon: LucideIcon;
+  path: string;
+  disabled?: boolean;
+}
+
+const Sidebar: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const navigationItems = [
+  const navigationItems: NavigationItem[] = [
     { id: 'signin', label: 'Sign In', icon: User, path: '/', disabled: true },
     { id: 'home', label: 'Thanos', icon: Home, path: '/dashboard' },
     { id: 'avatar', label: 'Avatar', icon: User, path: '/avatar' },
@@ -26,6 +35,12 @@ const Sidebar = () => {
     { id: 'spaces', label: 'Spaces', icon: Grid3X3, path: '/spaces', disabled: true },
     { id: 'game', label: 'Game Engine', icon: Gamepad2, path: '/game' },
   ];
+
+  const handleNavigate = (path: string, disabled?: boolean): void => {
+    if (!disabled) {
+      navigate(path);
+    }
+  };
 
   return (
     <motion.div
@@ -62,7 +77,7 @@ const Sidebar = () => {
           return (
             <motion.button
               key={item.id}
-              onClick={() => !isDisabled && navigate(item.path)}
+              onClick={() => handleNavigate(item.path, isDisabled)}
               style={{
                 display: 'flex',
                 alignItems: 'center',
