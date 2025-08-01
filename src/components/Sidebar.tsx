@@ -27,12 +27,11 @@ const Sidebar: React.FC = () => {
   const navigate = useNavigate();
 
   const navigationItems: NavigationItem[] = [
-    { id: 'signin', label: 'Sign In', icon: User, path: '/', disabled: true },
     { id: 'home', label: 'Thanos', icon: Home, path: '/dashboard' },
     { id: 'avatar', label: 'Avatar', icon: User, path: '/avatar' },
     { id: 'settings', label: 'Settings', icon: Settings, path: '/settings' },
     { id: 'leaderboard', label: 'LeaderBoard', icon: Trophy, path: '/leaderboard' },
-    { id: 'spaces', label: 'Spaces', icon: Grid3X3, path: '/spaces', disabled: true },
+    { id: 'spaces', label: 'Spaces', icon: Grid3X3, path: '/spaces' },
     { id: 'game', label: 'Game Engine', icon: Gamepad2, path: '/game' },
   ];
 
@@ -104,7 +103,7 @@ const Sidebar: React.FC = () => {
             >
               <Icon size={20} />
               <span>{item.label}</span>
-              {item.id === 'spaces' && (
+              {item.id === 'game' && (
                 <Construction size={16} style={{ marginLeft: 'auto', opacity: 0.6 }} />
               )}
             </motion.button>

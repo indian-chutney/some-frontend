@@ -2,6 +2,7 @@ import React from 'react';
 import { motion, useScroll, useTransform, MotionValue } from 'framer-motion';
 import { Target, TrendingUp, Calendar, Clock, Trophy, Zap, LucideIcon } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
+import { Card, CardContent } from '../components/ui/card';
 import { colors, fonts, spacing } from '../utils/theme';
 
 interface ThanosCharacterProps {
@@ -243,88 +244,125 @@ const HPBar: React.FC = () => {
 const ProgressCard: React.FC<ProgressCardProps> = ({ icon: Icon, title, value, subtitle, color, delay = 0 }) => {
   return (
     <motion.div
-      style={{
-        backgroundColor: colors.surface,
-        borderRadius: '16px',
-        padding: spacing.xl,
-        border: `1px solid ${colors.surfaceLight}`,
-        position: 'relative',
-        overflow: 'hidden',
-      }}
       initial={{ opacity: 0, y: 40 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay }}
-      whileHover={{ 
-        backgroundColor: colors.surfaceLight,
-        scale: 1.02,
-      }}
     >
-      {/* Background decoration */}
-      <div style={{
-        position: 'absolute',
-        top: '-50%',
-        right: '-20%',
-        width: '120px',
-        height: '120px',
-        background: `radial-gradient(circle, ${color}20 0%, transparent 70%)`,
-        borderRadius: '50%',
-      }} />
-
-      <div style={{
-        display: 'flex',
-        alignItems: 'flex-start',
-        justifyContent: 'space-between',
-        position: 'relative',
-        zIndex: 2,
-      }}>
-        <div style={{ flex: 1 }}>
+      <Card hover style={{ padding: spacing.lg }}>
+        <CardContent>
+          {/* Apple Watch Style Ring */}
           <div style={{
             display: 'flex',
             alignItems: 'center',
-            gap: spacing.md,
+            gap: spacing.lg,
             marginBottom: spacing.md,
           }}>
             <div style={{
-              width: '48px',
-              height: '48px',
-              backgroundColor: `${color}20`,
-              borderRadius: '12px',
+              position: 'relative',
+              width: '80px',
+              height: '80px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
             }}>
-              <Icon size={24} style={{ color }} />
+              {/* Background ring */}
+              <div style={{
+                position: 'absolute',
+                width: '100%',
+                height: '100%',
+                borderRadius: '50%',
+                border: `6px solid ${color}20`,
+              }} />
+              
+              {/* Progress ring */}
+              <motion.div
+                style={{
+                  position: 'absolute',
+                  width: '100%',
+                  height: '100%',
+                  borderRadius: '50%',
+                  border: `6px solid transparent`,
+                  borderTopColor: color,
+                  borderRightColor: color,
+                  borderBottomColor: color,
+                  transform: 'rotate(-90deg)',
+                }}
+                initial={{ clipPath: 'inset(0 50% 0 0)' }}
+                animate={{ clipPath: 'inset(0 15% 0 0)' }}
+                transition={{ duration: 1.5, delay: delay + 0.3, ease: 'easeOut' }}
+              />
+              
+              {/* Icon in center */}
+              <div style={{
+                width: '48px',
+                height: '48px',
+                backgroundColor: `${color}20`,
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 2,
+              }}>
+                <Icon size={24} style={{ color }} />
+              </div>
             </div>
-            
-            <h3 style={{
-              fontSize: '0.95rem',
-              fontWeight: '600',
-              color: colors.textSecondary,
-              margin: 0,
-            }}>
-              {title}
-            </h3>
+
+            <div style={{ flex: 1 }}>
+              <div style={{
+                fontSize: '2.2rem',
+                fontWeight: '800',
+                color: colors.textPrimary,
+                marginBottom: spacing.xs,
+                fontFamily: fonts.logo,
+                lineHeight: 1,
+              }}>
+                {value}
+              </div>
+              
+              <h3 style={{
+                fontSize: '1rem',
+                fontWeight: '600',
+                color: colors.textSecondary,
+                margin: 0,
+                marginBottom: spacing.xs,
+              }}>
+                {title}
+              </h3>
+
+              <p style={{
+                fontSize: '0.85rem',
+                color: colors.textMuted,
+                margin: 0,
+              }}>
+                {subtitle}
+              </p>
+            </div>
           </div>
 
-          <div style={{
-            fontSize: '2rem',
-            fontWeight: '800',
-            color: colors.textPrimary,
-            marginBottom: spacing.xs,
-            fontFamily: fonts.logo,
-          }}>
-            {value}
-          </div>
-
-          <p style={{
-            fontSize: '0.85rem',
-            color: colors.textMuted,
-            margin: 0,
-          }}>
-            {subtitle}
-          </p>
-        </div>
-      </div>
+          {/* Sparkle effect */}
+          <motion.div
+            style={{
+              position: 'absolute',
+              top: '10%',
+              right: '10%',
+              width: '6px',
+              height: '6px',
+              backgroundColor: color,
+              borderRadius: '50%',
+              boxShadow: `0 0 10px ${color}`,
+            }}
+            animate={{
+              scale: [1, 1.5, 1],
+              opacity: [0.5, 1, 0.5],
+            }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              delay,
+            }}
+          />
+        </CardContent>
+      </Card>
     </motion.div>
   );
 };

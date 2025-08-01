@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { colors, fonts } from '../utils/theme';
+import logoSvg from '../assets/logo.svg';
 
 type LogoSize = 'small' | 'medium' | 'large';
 
@@ -21,46 +22,26 @@ const Logo: React.FC<LogoProps> = ({ size = 'medium', showText = true, className
 
   return (
     <motion.div 
-      className={`flex items-center gap-3 ${className}`}
+      className={className}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '12px',
+      }}
       initial={{ opacity: 0, scale: 0.8 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5 }}
     >
-      {/* Placeholder logo - a simple geometric icon */}
-      <div 
+      {/* SVG Logo */}
+      <img 
+        src={logoSvg}
+        alt="ApplyWizz Logo"
         style={{
           width: currentSize.width,
           height: currentSize.height,
-          background: `linear-gradient(135deg, ${colors.primary}, ${colors.primaryLight})`,
-          borderRadius: '12px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          position: 'relative',
-          overflow: 'hidden',
+          filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))',
         }}
-      >
-        <div 
-          style={{
-            width: '60%',
-            height: '60%',
-            background: colors.textPrimary,
-            borderRadius: '4px',
-            opacity: 0.9,
-          }}
-        />
-        <div 
-          style={{
-            position: 'absolute',
-            top: '20%',
-            right: '20%',
-            width: '30%',
-            height: '30%',
-            background: colors.secondary,
-            borderRadius: '50%',
-          }}
-        />
-      </div>
+      />
       
       {showText && (
         <motion.span 
