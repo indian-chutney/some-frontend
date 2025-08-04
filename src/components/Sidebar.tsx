@@ -30,11 +30,11 @@ const Sidebar: React.FC = () => {
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
 
   const navigationItems: NavigationItem[] = [
-    { id: 'home', label: 'Thanos', icon: Home, path: '/dashboard' },
+    { id: 'home', label: 'Dashboard', icon: Home, path: '/dashboard' },
     { id: 'avatar', label: 'Avatar', icon: User, path: '/avatar' },
-    { id: 'settings', label: 'Settings', icon: Settings, path: '/settings' },
-    { id: 'leaderboard', label: 'LeaderBoard', icon: Trophy, path: '/leaderboard' },
+    { id: 'leaderboard', label: 'Leaderboard', icon: Trophy, path: '/leaderboard' },
     { id: 'spaces', label: 'Spaces', icon: Grid3X3, path: '/spaces' },
+    { id: 'settings', label: 'Settings', icon: Settings, path: '/settings' },
   ];
 
   const handleNavigate = (path: string, disabled?: boolean): void => {

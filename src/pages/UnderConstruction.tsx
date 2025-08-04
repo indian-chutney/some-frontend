@@ -144,7 +144,6 @@ const UnderConstruction: React.FC<UnderConstructionProps> = ({ title, descriptio
 
 // Settings Component
 export const Settings: React.FC = () => {
-  const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
   const [selectedTimeRange, setSelectedTimeRange] = useState<string>('30days');
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -341,7 +340,137 @@ export const Settings: React.FC = () => {
             </motion.div>
           </Card>
 
-          {/* Progress Chart Section */}
+          {/* Your Selected Role Section - Enhanced */}
+          <Card style={{ 
+            padding: spacing['2xl'], 
+            marginBottom: spacing.xl,
+            background: `linear-gradient(135deg, ${colors.primary}10 0%, ${colors.secondary}05 100%)`,
+            border: `1px solid ${colors.primary}20`,
+          }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: spacing.lg,
+            }}>
+              <h3 style={{
+                fontSize: '1.25rem',
+                fontWeight: '600',
+                color: colors.textPrimary,
+                margin: 0,
+                display: 'flex',
+                alignItems: 'center',
+                gap: spacing.sm,
+              }}>
+                <motion.div
+                  style={{
+                    width: '32px',
+                    height: '32px',
+                    backgroundColor: colors.primary,
+                    borderRadius: '8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                  whileHover={{ scale: 1.1 }}
+                >
+                  <User size={18} style={{ color: colors.textPrimary }} />
+                </motion.div>
+                Your Selected Role
+              </h3>
+              
+              <motion.button
+                style={{
+                  padding: `${spacing.sm} ${spacing.md}`,
+                  backgroundColor: 'transparent',
+                  border: `1px solid ${colors.primary}`,
+                  borderRadius: '6px',
+                  color: colors.primary,
+                  fontSize: '0.85rem',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  fontFamily: fonts.body,
+                }}
+                whileHover={{ 
+                  backgroundColor: colors.primary,
+                  color: colors.textPrimary,
+                }}
+                whileTap={{ scale: 0.95 }}
+              >
+                Change Role
+              </motion.button>
+            </div>
+            
+            <motion.div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: spacing.lg,
+                padding: spacing.lg,
+                backgroundColor: `${colors.surface}80`,
+                borderRadius: '12px',
+                border: `1px solid ${colors.surfaceLight}`,
+              }}
+              whileHover={{ backgroundColor: `${colors.surface}90` }}
+            >
+              <div style={{
+                width: '60px',
+                height: '60px',
+                backgroundColor: colors.secondary,
+                borderRadius: '12px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '1.5rem',
+                fontWeight: '700',
+                color: colors.textPrimary,
+                boxShadow: `0 4px 12px ${colors.secondary}40`,
+              }}>
+                🎯
+              </div>
+              
+              <div style={{ flex: 1 }}>
+                <h4 style={{
+                  fontSize: '1.1rem',
+                  fontWeight: '600',
+                  color: colors.textPrimary,
+                  margin: 0,
+                  marginBottom: spacing.xs,
+                }}>
+                  Productivity Specialist
+                </h4>
+                <p style={{
+                  fontSize: '0.9rem',
+                  color: colors.textSecondary,
+                  margin: 0,
+                  marginBottom: spacing.xs,
+                }}>
+                  Focused on optimizing workflows and achieving goals efficiently
+                </p>
+                <div style={{
+                  display: 'flex',
+                  gap: spacing.xs,
+                  flexWrap: 'wrap',
+                }}>
+                  {['Goal Tracking', 'Time Management', 'Analytics'].map((skill) => (
+                    <span
+                      key={skill}
+                      style={{
+                        padding: `${spacing.xs} ${spacing.sm}`,
+                        backgroundColor: `${colors.primary}20`,
+                        borderRadius: '4px',
+                        fontSize: '0.75rem',
+                        fontWeight: '600',
+                        color: colors.primary,
+                      }}
+                    >
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          </Card>
           <Card style={{ 
             padding: spacing['2xl'], 
             marginBottom: spacing.xl,
@@ -525,74 +654,6 @@ export const Settings: React.FC = () => {
                   </span>
                 </div>
               ))}
-            </div>
-          </Card>
-
-          {/* Settings Options */}
-          <Card style={{ padding: spacing['2xl'], marginBottom: spacing.xl }}>
-            <h3 style={{
-              fontSize: '1.25rem',
-              fontWeight: '600',
-              color: colors.textPrimary,
-              marginBottom: spacing.lg,
-            }}>
-              Preferences
-            </h3>
-            
-            {/* Sound Toggle */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              marginBottom: spacing.lg,
-            }}>
-              <div>
-                <h4 style={{
-                  fontSize: '1rem',
-                  fontWeight: '600',
-                  color: colors.textPrimary,
-                  margin: 0,
-                  marginBottom: spacing.xs,
-                }}>
-                  Sound Effects
-                </h4>
-                <p style={{
-                  color: colors.textSecondary,
-                  margin: 0,
-                  fontSize: '0.9rem',
-                }}>
-                  Enable audio feedback for interactions
-                </p>
-              </div>
-              
-              <motion.button
-                onClick={() => setSoundEnabled(!soundEnabled)}
-                style={{
-                  width: '50px',
-                  height: '30px',
-                  backgroundColor: soundEnabled ? colors.primary : colors.surfaceLight,
-                  border: 'none',
-                  borderRadius: '15px',
-                  position: 'relative',
-                  cursor: 'pointer',
-                }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <motion.div
-                  style={{
-                    width: '26px',
-                    height: '26px',
-                    backgroundColor: colors.textPrimary,
-                    borderRadius: '50%',
-                    position: 'absolute',
-                    top: '2px',
-                  }}
-                  animate={{
-                    left: soundEnabled ? '22px' : '2px',
-                  }}
-                  transition={{ duration: 0.2 }}
-                />
-              </motion.button>
             </div>
           </Card>
 

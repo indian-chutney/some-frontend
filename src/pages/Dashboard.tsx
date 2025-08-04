@@ -517,46 +517,6 @@ const Dashboard: React.FC = () => {
           <ThanosCharacter scrollY={scrollY} />
           <HPBar />
 
-          {/* Welcome Message */}
-          <motion.div
-            style={{
-              textAlign: "center",
-              marginTop: spacing["3xl"],
-              zIndex: 10,
-              padding: `0 ${spacing.md}`,
-            }}
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 1 }}
-          >
-            <h1
-              style={{
-                fontSize: window.innerWidth >= 768 ? "2.5rem" : "2rem",
-                fontWeight: "800",
-                color: colors.textPrimary,
-                margin: 0,
-                marginBottom: spacing.md,
-                background: `linear-gradient(135deg, ${colors.textPrimary} 0%, ${colors.primaryLight} 100%)`,
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                backgroundClip: "text",
-              }}
-            >
-              Welcome Back, Hero
-            </h1>
-            <p
-              style={{
-                fontSize: window.innerWidth >= 768 ? "1.2rem" : "1rem",
-                color: colors.textSecondary,
-                margin: 0,
-                lineHeight: 1.6,
-              }}
-            >
-              Ready to balance productivity and achieve perfectly balanced
-              goals?
-            </p>
-          </motion.div>
-
           {/* Scroll indicator */}
           <motion.div
             style={{
@@ -599,7 +559,7 @@ const Dashboard: React.FC = () => {
           </motion.div>
         </div>
 
-        {/* Progress Section - Separate scrollable area */}
+        {/* Progress Section - Separate scrollable area with improved styling */}
         <motion.div
           style={{
             y: progressY,
@@ -609,6 +569,8 @@ const Dashboard: React.FC = () => {
             position: "relative",
             zIndex: 10,
             minHeight: "100vh",
+            borderTop: `1px solid ${colors.surfaceLight}20`,
+            background: `linear-gradient(135deg, ${colors.background} 0%, ${colors.surface}20 50%, ${colors.background} 100%)`,
           }}
         >
           <motion.div
@@ -621,6 +583,40 @@ const Dashboard: React.FC = () => {
             transition={{ duration: 0.8 }}
             viewport={{ once: true }}
           >
+            <motion.h1
+              style={{
+                fontSize: window.innerWidth >= 768 ? "2.5rem" : "2rem",
+                fontWeight: "800",
+                color: colors.textPrimary,
+                margin: 0,
+                marginBottom: spacing.lg,
+                background: `linear-gradient(135deg, ${colors.textPrimary} 0%, ${colors.primaryLight} 100%)`,
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+              }}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              viewport={{ once: true }}
+            >
+              Welcome Back, Hero
+            </motion.h1>
+            <motion.p
+              style={{
+                fontSize: window.innerWidth >= 768 ? "1.2rem" : "1rem",
+                color: colors.textSecondary,
+                margin: 0,
+                marginBottom: spacing.lg,
+                lineHeight: 1.6,
+              }}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.3 }}
+              viewport={{ once: true }}
+            >
+              Ready to balance productivity and achieve perfectly balanced goals?
+            </motion.p>
             <h2
               style={{
                 fontSize: window.innerWidth >= 768 ? "2rem" : "1.5rem",
@@ -645,31 +641,42 @@ const Dashboard: React.FC = () => {
             </p>
           </motion.div>
 
-          {/* Progress Grid - Responsive */}
+          {/* Progress Grid - Responsive and Centered */}
           <div
             style={{
-              display: "grid",
-              gridTemplateColumns:
-                window.innerWidth >= 1024
-                  ? "repeat(3, 1fr)"
-                  : window.innerWidth >= 640
-                  ? "repeat(2, 1fr)"
-                  : "1fr",
-              gap: window.innerWidth >= 768 ? spacing.xl : spacing.lg,
-              marginBottom: spacing["3xl"],
+              display: "flex",
+              justifyContent: "center",
+              width: "100%",
             }}
           >
-            {progressData.map((item, index) => (
-              <ProgressCard
-                key={item.title}
-                icon={item.icon}
-                title={item.title}
-                value={item.value}
-                subtitle={item.subtitle}
-                color={item.color}
-                delay={index * 0.1}
-              />
-            ))}
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns:
+                  window.innerWidth >= 1024
+                    ? "repeat(2, minmax(300px, 400px))"
+                    : window.innerWidth >= 640
+                    ? "repeat(2, 1fr)"
+                    : "1fr",
+                gap: window.innerWidth >= 768 ? spacing.xl : spacing.lg,
+                marginBottom: spacing["3xl"],
+                justifyContent: "center",
+                width: "100%",
+                maxWidth: "900px",
+              }}
+            >
+              {progressData.map((item, index) => (
+                <ProgressCard
+                  key={item.title}
+                  icon={item.icon}
+                  title={item.title}
+                  value={item.value}
+                  subtitle={item.subtitle}
+                  color={item.color}
+                  delay={index * 0.1}
+                />
+              ))}
+            </div>
           </div>
         </motion.div>
       </main>
