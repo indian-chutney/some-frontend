@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { User, Check, ArrowRight, Shuffle, Palette, Star } from 'lucide-react';
+import { User, Check, ArrowRight, Shuffle, Palette, Star, Upload, Image } from 'lucide-react';
+import Sidebar from '../components/Sidebar';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
 import { colors, fonts, spacing } from '../utils/theme';
@@ -153,19 +154,26 @@ const AvatarSelection: React.FC = () => {
       minHeight: '100vh',
       background: `linear-gradient(135deg, ${colors.background} 0%, ${colors.surface} 100%)`,
       display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: spacing.lg,
       fontFamily: fonts.body,
     }}>
-      <div style={{
-        width: '100%',
-        maxWidth: '1200px',
-        display: 'grid',
-        gridTemplateColumns: window.innerWidth >= 1024 ? '1fr 400px' : '1fr',
-        gap: spacing['3xl'],
-        alignItems: 'start',
+      <Sidebar />
+      
+      <main style={{
+        flex: 1,
+        marginLeft: window.innerWidth >= 1024 ? '280px' : '0',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: spacing.lg,
       }}>
+        <div style={{
+          width: '100%',
+          maxWidth: '1200px',
+          display: 'grid',
+          gridTemplateColumns: window.innerWidth >= 1024 ? '1fr 400px' : '1fr',
+          gap: spacing['3xl'],
+          alignItems: 'start',
+        }}>
         {/* Left Column - Avatar Selection */}
         <motion.div
           initial={{ opacity: 0, x: -50 }}
@@ -250,6 +258,76 @@ const AvatarSelection: React.FC = () => {
                 onClick={() => setSelectedAvatar(avatar)}
               />
             ))}
+          </motion.div>
+
+          {/* Custom Avatar Placeholder Section */}
+          <motion.div
+            style={{
+              marginBottom: spacing['2xl'],
+              padding: spacing.lg,
+              border: `2px dashed ${colors.primary}40`,
+              borderRadius: '12px',
+              backgroundColor: `${colors.primary}05`,
+            }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.6 }}
+          >
+            <div style={{
+              textAlign: 'center',
+              color: colors.textSecondary,
+            }}>
+              <motion.div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: spacing.sm,
+                  marginBottom: spacing.md,
+                }}
+                whileHover={{ scale: 1.05 }}
+              >
+                <Upload size={20} style={{ color: colors.primary }} />
+                <h4 style={{
+                  fontSize: '1rem',
+                  fontWeight: '600',
+                  color: colors.primary,
+                  margin: 0,
+                }}>
+                  Custom Avatar Upload
+                </h4>
+              </motion.div>
+              <p style={{
+                fontSize: '0.9rem',
+                color: colors.textMuted,
+                margin: 0,
+                marginBottom: spacing.sm,
+              }}>
+                Upload your own image for a personalized avatar
+              </p>
+              <motion.button
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: spacing.xs,
+                  padding: `${spacing.sm} ${spacing.md}`,
+                  backgroundColor: 'transparent',
+                  border: `1px solid ${colors.primary}40`,
+                  borderRadius: '6px',
+                  color: colors.primary,
+                  fontSize: '0.85rem',
+                  cursor: 'pointer',
+                  fontFamily: fonts.body,
+                }}
+                whileHover={{ 
+                  backgroundColor: `${colors.primary}10`,
+                  borderColor: colors.primary,
+                }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Image size={16} />
+                Coming Soon
+              </motion.button>
+            </div>
           </motion.div>
         </motion.div>
 
@@ -481,7 +559,8 @@ const AvatarSelection: React.FC = () => {
             </CardContent>
           </Card>
         </motion.div>
-      </div>
+        </div>
+      </main>
     </div>
   );
 };

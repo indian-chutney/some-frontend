@@ -8,7 +8,6 @@ import {
 } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import Login from "./pages/Login";
-import Welcome from "./pages/Welcome";
 import AvatarSelection from "./pages/AvatarSelection";
 import Dashboard from "./pages/Dashboard";
 import { Settings, Leaderboard, Spaces } from "./pages/UnderConstruction";
@@ -59,14 +58,6 @@ const PageRoutes = () => {
         <Route path="/auth/success" element={<AuthSuccess />} />
         {isAuthenticated ? (
           <>
-            <Route
-              path="/welcome"
-              element={
-                <PageTransition>
-                  <Welcome />
-                </PageTransition>
-              }
-            />
             <Route
               path="/avatar"
               element={
