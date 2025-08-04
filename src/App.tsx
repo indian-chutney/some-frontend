@@ -41,9 +41,7 @@ const App: React.FC = () => {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <AuthContextProvider>
-          <AnimatePresence mode="wait">
-            <PageRoutes />
-          </AnimatePresence>
+          <PageRoutes />
         </AuthContextProvider>
       </BrowserRouter>
     </QueryClientProvider>
@@ -52,77 +50,80 @@ const App: React.FC = () => {
 
 const PageRoutes = () => {
   const { isAuthenticated } = useAuthContext();
+  console.log(isAuthenticated);
   const location = useLocation();
 
   return (
-    <Routes location={location}>
-      <Route path="/auth/success" element={<AuthSuccess />} />
-      {isAuthenticated ? (
-        <>
-          <Route
-            path="/welcome"
-            element={
-              <PageTransition>
-                <Welcome />
-              </PageTransition>
-            }
-          />
-          <Route
-            path="/avatar"
-            element={
-              <PageTransition>
-                <AvatarSelection />
-              </PageTransition>
-            }
-          />
-          <Route
-            path="/dashboard"
-            element={
-              <PageTransition>
-                <Dashboard />
-              </PageTransition>
-            }
-          />
-          <Route
-            path="/settings"
-            element={
-              <PageTransition>
-                <Settings />
-              </PageTransition>
-            }
-          />
-          <Route
-            path="/leaderboard"
-            element={
-              <PageTransition>
-                <Leaderboard />
-              </PageTransition>
-            }
-          />
-          <Route
-            path="/spaces"
-            element={
-              <PageTransition>
-                <Spaces />
-              </PageTransition>
-            }
-          />
-          <Route path="/" element={<Navigate to="/dashboard" />} />
-        </>
-      ) : (
-        <>
-          <Route
-            path="/"
-            element={
-              <PageTransition>
-                <Login />
-              </PageTransition>
-            }
-          />
-          <Route path="*" element={<Navigate to="/" />} />
-        </>
-      )}
-    </Routes>
+    <AnimatePresence mode="wait">
+      <Routes location={location}>
+        <Route path="/auth/success" element={<AuthSuccess />} />
+        {isAuthenticated ? (
+          <>
+            <Route
+              path="/welcome"
+              element={
+                <PageTransition>
+                  <Welcome />
+                </PageTransition>
+              }
+            />
+            <Route
+              path="/avatar"
+              element={
+                <PageTransition>
+                  <AvatarSelection />
+                </PageTransition>
+              }
+            />
+            <Route
+              path="/dashboard"
+              element={
+                <PageTransition>
+                  <Dashboard />
+                </PageTransition>
+              }
+            />
+            <Route
+              path="/settings"
+              element={
+                <PageTransition>
+                  <Settings />
+                </PageTransition>
+              }
+            />
+            <Route
+              path="/leaderboard"
+              element={
+                <PageTransition>
+                  <Leaderboard />
+                </PageTransition>
+              }
+            />
+            <Route
+              path="/spaces"
+              element={
+                <PageTransition>
+                  <Spaces />
+                </PageTransition>
+              }
+            />
+            <Route path="/" element={<Navigate to="/dashboard" />} />
+          </>
+        ) : (
+          <>
+            <Route
+              path="/"
+              element={
+                <PageTransition>
+                  <Login />
+                </PageTransition>
+              }
+            />
+            <Route path="*" element={<Navigate to="/" />} />
+          </>
+        )}
+      </Routes>
+    </AnimatePresence>
   );
 };
 

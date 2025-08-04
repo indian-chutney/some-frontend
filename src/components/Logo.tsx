@@ -29,7 +29,6 @@ const Logo: React.FC<LogoProps> = ({
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        marginBottom: spacing.xl,
       }}
       initial={{ opacity: 0, scale: 0.8 }}
       animate={{ opacity: 1, scale: 1 }}
@@ -56,7 +55,6 @@ const Logo: React.FC<LogoProps> = ({
             fontWeight: "700",
             color: colors.textPrimary,
             letterSpacing: "-0.02em",
-            marginLeft: "12px",
           }}
           initial={{ opacity: 0, x: -10 }}
           animate={{ opacity: 1, x: 0 }}
@@ -70,4 +68,3 @@ const Logo: React.FC<LogoProps> = ({
 };
 
 export default Logo;
-
