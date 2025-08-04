@@ -1,379 +1,223 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
-import { colors, fonts, spacing } from '../utils/theme';
+import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { fonts, spacing } from "../utils/theme";
+import AnimatedBackground from "./../components/ui/AnimatedBackground.tsx";
+import Logo from "../components/Logo.tsx";
 
-interface Cover {
-  id: number;
-  size: number;
-  x: number;
-  y: number;
-  rotation: number;
-  opacity: number;
-}
-
-// Background pattern component for album covers
-const AlbumCoverPattern: React.FC = () => {
-  const covers: Cover[] = Array.from({ length: 20 }, (_, i) => ({
-    id: i,
-    size: Math.random() * 60 + 40,
-    x: Math.random() * 100,
-    y: Math.random() * 100,
-    rotation: Math.random() * 360,
-    opacity: Math.random() * 0.1 + 0.05,
-  }));
-
-  return (
-    <div style={{
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      width: '100%',
-      height: '100%',
-      overflow: 'hidden',
-      zIndex: 1,
-    }}>
-      {covers.map((cover) => (
-        <motion.div
-          key={cover.id}
-          style={{
-            position: 'absolute',
-            left: `${cover.x}%`,
-            top: `${cover.y}%`,
-            width: `${cover.size}px`,
-            height: `${cover.size}px`,
-            backgroundColor: colors.primary,
-            borderRadius: '8px',
-            opacity: cover.opacity,
-            transform: `rotate(${cover.rotation}deg)`,
-          }}
-          animate={{
-            rotate: [cover.rotation, cover.rotation + 360],
-            scale: [1, 1.1, 1],
-          }}
-          transition={{
-            duration: 20 + Math.random() * 10,
-            repeat: Infinity,
-            ease: 'linear',
-          }}
-        />
-      ))}
-    </div>
-  );
-};
-
-// Diamond logo pattern component
-const DiamondLogo: React.FC = () => {
-  return (
-    <motion.div
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginBottom: spacing.xl,
-      }}
-      initial={{ opacity: 0, scale: 0.8 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.6, delay: 0.2 }}
-    >
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(3, 12px)',
-        gridTemplateRows: 'repeat(3, 12px)',
-        gap: '4px',
-        padding: spacing.md,
-      }}>
-        {Array.from({ length: 9 }, (_, i) => (
-          <motion.div
-            key={i}
-            style={{
-              width: '12px',
-              height: '12px',
-              backgroundColor: i === 4 ? colors.secondary : colors.primary,
-              borderRadius: '2px',
-              transform: 'rotate(45deg)',
-            }}
-            initial={{ opacity: 0, scale: 0 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{
-              duration: 0.3,
-              delay: 0.4 + i * 0.1,
-              type: 'spring',
-              bounce: 0.3,
-            }}
-          />
-        ))}
-      </div>
-    </motion.div>
-  );
-};
+// ---------------
+// CONFIGURATION
+// ---------------
+const MS_CLIENT_ID = "3ff100ef-fb6d-4809-a512-de5c525b0506";
+const MS_TENANT_ID = "dd60b066-1b78-4515-84fb-a565c251cb5a";
+const MS_REDIRECT_URI = "http://localhost:3000/auth/redirect";
 
 const Login: React.FC = () => {
-  const [email, setEmail] = useState<string>('');
-  const [password, setPassword] = useState<string>('');
-  const [showPassword, setShowPassword] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const navigate = useNavigate();
+  const [isLoggingIn, setIsLoggingIn] = useState<boolean>(false);
+  const [buttonClicked, setButtonClicked] = useState<boolean>(false);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
-    e.preventDefault();
-    setIsLoading(true);
-    
-    // Simulate login process
+  const handleLogin = () => {
+    if (buttonClicked || isLoggingIn) return;
+
+    setButtonClicked(true);
+    setIsLoggingIn(true);
+
+    const authUrl =
+      `https://login.microsoftonline.com/${MS_TENANT_ID}/oauth2/v2.0/authorize?` +
+      new URLSearchParams({
+        client_id: MS_CLIENT_ID,
+        response_type: "code",
+        redirect_uri: MS_REDIRECT_URI,
+        response_mode: "query",
+        scope: "openid profile email",
+        state: `login-${Date.now()}`,
+      }).toString();
+
     setTimeout(() => {
-      setIsLoading(false);
-      navigate('/welcome');
-    }, 1500);
+      window.location.href = authUrl;
+    }, 500);
   };
 
-  const handleInputFocus = (e: React.FocusEvent<HTMLInputElement>): void => {
-    e.target.style.borderColor = colors.primary;
-    e.target.style.boxShadow = `0 0 0 3px ${colors.primary}20`;
-  };
+  useEffect(() => {
+    if (isLoggingIn) {
+      console.log("Login process initiated...");
+    }
+  }, [isLoggingIn]);
 
-  const handleInputBlur = (e: React.FocusEvent<HTMLInputElement>): void => {
-    e.target.style.borderColor = colors.surfaceLight;
-    e.target.style.boxShadow = 'none';
-  };
+  useEffect(() => {
+    return () => {
+      if (buttonClicked) {
+        setButtonClicked(false);
+        setIsLoggingIn(false);
+      }
+    };
+  }, []);
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      backgroundColor: colors.background,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: spacing.lg,
-      fontFamily: fonts.body,
-      position: 'relative',
-    }}>
-      {/* Album covers background pattern */}
-      <AlbumCoverPattern />
-      
-      <motion.div
+    <>
+      <AnimatedBackground />
+      <div
         style={{
-          width: '100%',
-          maxWidth: '400px',
-          backgroundColor: colors.surface,
-          padding: spacing['3xl'],
-          borderRadius: '24px',
-          border: `1px solid ${colors.surfaceLight}`,
-          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.8)',
-          position: 'relative',
-          zIndex: 10,
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: spacing.lg,
+          fontFamily: fonts.body,
+          position: "relative",
+          zIndex: 1,
         }}
-        initial={{ opacity: 0, y: 20, scale: 0.95 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.6, ease: 'easeOut' }}
       >
-        {/* Diamond Logo Pattern */}
-        <DiamondLogo />
-        
-        {/* Title */}
-        <motion.div 
-          style={{ textAlign: 'center', marginBottom: spacing['2xl'] }}
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
+        <motion.div
+          style={{
+            width: "100%",
+            maxWidth: "400px",
+            backgroundColor: "rgba(22, 27, 34, 0.95)",
+            backdropFilter: "blur(20px)",
+            padding: spacing["3xl"],
+            borderRadius: "24px",
+            border: "1px solid rgba(48, 54, 61, 0.8)",
+            boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.6)",
+            position: "relative",
+          }}
+          initial={{ opacity: 0, y: 20, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
         >
-          <h1 style={{
-            fontSize: '1.8rem',
-            fontWeight: '700',
-            color: colors.textPrimary,
-            margin: 0,
-            marginBottom: spacing.sm,
-            fontFamily: fonts.logo,
-          }}>
-            Welcome Back
-          </h1>
-          <p style={{
-            color: colors.textSecondary,
-            fontSize: '0.95rem',
-            margin: 0,
-          }}>
-            Sign in to continue your journey
-          </p>
-        </motion.div>
+          {/* Custom Logo with props */}
+          <Logo size="large" showText={true} />
 
-        {/* Login Form */}
-        <motion.form 
-          onSubmit={handleSubmit}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-        >
-          {/* Email Field */}
-          <div style={{ marginBottom: spacing.lg }}>
-            <label style={{
-              display: 'block',
-              fontSize: '0.9rem',
-              fontWeight: '600',
-              color: colors.textSecondary,
-              marginBottom: spacing.sm,
-            }}>
-              Email
-            </label>
-            <div style={{ position: 'relative' }}>
-              <Mail 
-                size={20} 
-                style={{
-                  position: 'absolute',
-                  left: spacing.md,
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  color: colors.textMuted,
-                }}
-              />
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
-                required
-                style={{
-                  width: '100%',
-                  padding: `${spacing.md} ${spacing.md} ${spacing.md} 3rem`,
-                  backgroundColor: colors.background,
-                  border: `1px solid ${colors.surfaceLight}`,
-                  borderRadius: '12px',
-                  color: colors.textPrimary,
-                  fontSize: '0.95rem',
-                  fontFamily: fonts.body,
-                  outline: 'none',
-                  transition: 'all 0.2s ease',
-                }}
-                onFocus={handleInputFocus}
-                onBlur={handleInputBlur}
-              />
-            </div>
-          </div>
-
-          {/* Password Field */}
-          <div style={{ marginBottom: spacing.xl }}>
-            <label style={{
-              display: 'block',
-              fontSize: '0.9rem',
-              fontWeight: '600',
-              color: colors.textSecondary,
-              marginBottom: spacing.sm,
-            }}>
-              Password
-            </label>
-            <div style={{ position: 'relative' }}>
-              <Lock 
-                size={20} 
-                style={{
-                  position: 'absolute',
-                  left: spacing.md,
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  color: colors.textMuted,
-                }}
-              />
-              <input
-                type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
-                required
-                style={{
-                  width: '100%',
-                  padding: `${spacing.md} 3rem ${spacing.md} 3rem`,
-                  backgroundColor: colors.background,
-                  border: `1px solid ${colors.surfaceLight}`,
-                  borderRadius: '12px',
-                  color: colors.textPrimary,
-                  fontSize: '0.95rem',
-                  fontFamily: fonts.body,
-                  outline: 'none',
-                  transition: 'all 0.2s ease',
-                }}
-                onFocus={handleInputFocus}
-                onBlur={handleInputBlur}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                style={{
-                  position: 'absolute',
-                  right: spacing.md,
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  background: 'none',
-                  border: 'none',
-                  color: colors.textMuted,
-                  cursor: 'pointer',
-                  padding: '4px',
-                }}
-              >
-                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-              </button>
-            </div>
-          </div>
-
-          {/* Submit Button */}
-          <motion.button
-            type="submit"
-            disabled={isLoading}
-            style={{
-              width: '100%',
-              padding: spacing.lg,
-              backgroundColor: colors.textPrimary,
-              color: colors.background,
-              border: 'none',
-              borderRadius: '12px',
-              fontSize: '1rem',
-              fontWeight: '600',
-              fontFamily: fonts.body,
-              cursor: isLoading ? 'not-allowed' : 'pointer',
-              opacity: isLoading ? 0.7 : 1,
-              transition: 'all 0.2s ease',
-            }}
-            whileHover={!isLoading ? { backgroundColor: '#f5f5f5' } : {}}
-            whileTap={!isLoading ? { scale: 0.98 } : {}}
+          {/* Title */}
+          <motion.div
+            style={{ textAlign: "center", marginBottom: spacing["2xl"] }}
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
           >
-            {isLoading ? (
+            <h1
+              style={{
+                fontSize: "1.8rem",
+                fontWeight: "700",
+                color: "#f0f6fc",
+                margin: 0,
+                marginBottom: spacing.sm,
+                fontFamily: fonts.logo,
+              }}
+            >
+              Welcome Back
+            </h1>
+            <p
+              style={{
+                color: "#8b949e",
+                fontSize: "0.95rem",
+                margin: 0,
+              }}
+            >
+              Sign in to continue your journey
+            </p>
+          </motion.div>
+
+          {/* Microsoft Login Button */}
+          <motion.button
+            onClick={handleLogin}
+            disabled={buttonClicked || isLoggingIn}
+            style={{
+              width: "100%",
+              padding: spacing.lg,
+              backgroundColor: isLoggingIn ? "#1a1a2e" : "#2F2F95",
+              color: "#fff",
+              border: "none",
+              borderRadius: "12px",
+              fontSize: "1rem",
+              fontWeight: "600",
+              fontFamily: fonts.body,
+              cursor: buttonClicked || isLoggingIn ? "not-allowed" : "pointer",
+              transition: "all 0.3s ease",
+              marginBottom: spacing.xl,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: spacing.md,
+              opacity: buttonClicked || isLoggingIn ? 0.7 : 1,
+              position: "relative",
+              overflow: "hidden",
+            }}
+            whileHover={
+              !buttonClicked && !isLoggingIn
+                ? {
+                    backgroundColor: "#23237A",
+                    scale: 1.02,
+                  }
+                : {}
+            }
+            whileTap={!buttonClicked && !isLoggingIn ? { scale: 0.98 } : {}}
+          >
+            {isLoggingIn ? (
               <motion.div
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: spacing.sm }}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: spacing.sm,
+                }}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
               >
                 <motion.div
                   style={{
-                    width: '16px',
-                    height: '16px',
-                    border: `2px solid ${colors.background}`,
-                    borderTop: '2px solid transparent',
-                    borderRadius: '50%',
+                    width: "20px",
+                    height: "20px",
+                    border: "2px solid #fff",
+                    borderTop: "2px solid transparent",
+                    borderRadius: "50%",
                   }}
                   animate={{ rotate: 360 }}
-                  transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                 />
-                Logging In...
+                Redirecting to Microsoft...
               </motion.div>
             ) : (
-              'Log In'
+              <>
+                <svg height="20" viewBox="0 0 24 24" width="20">
+                  <rect fill="#F25022" height="10" width="10" x="1" y="1" />
+                  <rect fill="#7FBA00" height="10" width="10" x="13" y="1" />
+                  <rect fill="#00A4EF" height="10" width="10" x="1" y="13" />
+                  <rect fill="#FFB900" height="10" width="10" x="13" y="13" />
+                </svg>
+                Sign in with Microsoft
+              </>
             )}
           </motion.button>
-        </motion.form>
 
-        {/* Footer */}
-        <motion.div 
-          style={{ 
-            textAlign: 'center', 
-            marginTop: spacing.xl,
-            color: colors.textMuted,
-            fontSize: '0.85rem',
-          }}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.5 }}
-        >
-          <span style={{ color: colors.primary, cursor: 'pointer' }}>Forgot your password?</span>
+          <motion.div
+            style={{
+              textAlign: "center",
+              marginTop: spacing.xl,
+              color: "#6e7681",
+              fontSize: "0.85rem",
+            }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.5 }}
+          >
+            <span
+              style={{
+                color: "#58a6ff",
+                cursor: "pointer",
+                textDecoration: "none",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.textDecoration = "underline";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.textDecoration = "none";
+              }}
+            >
+              Need help signing in?
+            </span>
+          </motion.div>
         </motion.div>
-      </motion.div>
-    </div>
+      </div>
+    </>
   );
 };
 

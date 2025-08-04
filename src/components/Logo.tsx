@@ -1,60 +1,66 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { colors, fonts } from '../utils/theme';
-import logoSvg from '../assets/logo.svg';
-
-type LogoSize = 'small' | 'medium' | 'large';
+import React from "react";
+import { motion } from "framer-motion";
+import { spacing, colors, fonts } from "../utils/theme";
+import logoSvg from "../assets/logo.svg";
 
 interface LogoProps {
-  size?: LogoSize;
+  size?: "small" | "medium" | "large";
   showText?: boolean;
   className?: string;
 }
 
-const Logo: React.FC<LogoProps> = ({ size = 'medium', showText = true, className = '' }) => {
+const Logo: React.FC<LogoProps> = ({
+  size = "medium",
+  showText = true,
+  className = "",
+}) => {
   const sizes = {
-    small: { width: 32, height: 32, fontSize: '1.2rem' },
-    medium: { width: 48, height: 48, fontSize: '1.5rem' },
-    large: { width: 64, height: 64, fontSize: '2rem' },
+    small: { width: 32, height: 32, fontSize: "1.2rem" },
+    medium: { width: 48, height: 48, fontSize: "1.5rem" },
+    large: { width: 64, height: 64, fontSize: "2rem" },
   };
 
   const currentSize = sizes[size];
 
   return (
-    <motion.div 
+    <motion.div
       className={className}
       style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '12px',
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        marginBottom: spacing.xl,
       }}
       initial={{ opacity: 0, scale: 0.8 }}
       animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.5 }}
+      transition={{ duration: 0.6, delay: 0.2 }}
     >
-      {/* SVG Logo */}
-      <img 
+      <motion.img
         src={logoSvg}
         alt="ApplyWizz Logo"
         style={{
           width: currentSize.width,
           height: currentSize.height,
-          filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))',
+          borderRadius: "4px",
         }}
+        initial={{ opacity: 0, scale: 0.5 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5, delay: 0.3 }}
       />
-      
+
       {showText && (
-        <motion.span 
+        <motion.span
           style={{
             fontFamily: fonts.logo,
             fontSize: currentSize.fontSize,
-            fontWeight: '700',
+            fontWeight: "700",
             color: colors.textPrimary,
-            letterSpacing: '-0.02em',
+            letterSpacing: "-0.02em",
+            marginLeft: "12px",
           }}
           initial={{ opacity: 0, x: -10 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
         >
           ApplyWizz
         </motion.span>
@@ -64,3 +70,4 @@ const Logo: React.FC<LogoProps> = ({ size = 'medium', showText = true, className
 };
 
 export default Logo;
+
