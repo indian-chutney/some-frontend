@@ -615,7 +615,8 @@ const Dashboard: React.FC = () => {
               transition={{ duration: 0.8, delay: 0.3 }}
               viewport={{ once: true }}
             >
-              Ready to balance productivity and achieve perfectly balanced goals?
+              Ready to balance productivity and achieve perfectly balanced
+              goals?
             </motion.p>
             <h2
               style={{
@@ -685,4 +686,3 @@ const Dashboard: React.FC = () => {
 };
 
 export default Dashboard;
-

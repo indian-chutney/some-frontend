@@ -32,6 +32,7 @@ const AuthSuccess: React.FC = () => {
     navigate("/dashboard", { replace: true });
     return null;
   }
+  const { login } = useAuthContext();
 
   const [selectedRole, setSelectedRole] = useState<string>("");
   const [step, setStep] = useState<"success" | "role-selection">("success");
@@ -39,8 +40,20 @@ const AuthSuccess: React.FC = () => {
 
   const [searchParams] = useSearchParams();
   const id_token = searchParams.get("id_token");
+  const exists = searchParams.get("exists");
 
-  const { login } = useAuthContext();
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
+
+  useEffect(() => {
+    if (exists === "true") {
+      login(id_token as string);
+      navigate("/dashboard", { replace: true });
+    }
+  }, [exists, navigate]);
 
   const roleOptions: RoleOption[] = [
     {
@@ -91,7 +104,7 @@ const AuthSuccess: React.FC = () => {
   const handleRoleSubmit = () => {
     if (selectedRole) {
       // Note: localStorage is not available in Claude artifacts
-      // localStorage.setItem("userRole", selectedRole);
+      localStorage.setItem("userRole", selectedRole);
       login(id_token as string);
       navigate("/dashboard");
     }
