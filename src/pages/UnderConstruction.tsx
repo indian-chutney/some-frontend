@@ -691,6 +691,7 @@ export const Settings: React.FC = () => {
 // Leaderboard Component
 export const Leaderboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('group');
+  const [activeProgressPeriod, setActiveProgressPeriod] = useState<'today' | 'week' | 'month' | 'alltime'>('today');
 
   const groupLeaderboard: LeaderboardEntry[] = [
     { rank: 1, name: 'Team Alpha', score: 2450, change: '+12' },
@@ -714,6 +715,62 @@ export const Leaderboard: React.FC = () => {
   }));
 
   const currentData = activeTab === 'group' ? groupLeaderboard : individualLeaderboard;
+
+  // Personal progress data for the current user
+  const generatePersonalProgress = (period: 'today' | 'week' | 'month' | 'alltime') => {
+    const baseData = {
+      rank: 23, // User's current rank
+      totalParticipants: activeTab === 'group' ? 45 : 156,
+      name: 'John Doe', // Current user name
+    };
+
+    switch (period) {
+      case 'today':
+        return {
+          ...baseData,
+          score: 145,
+          change: '+12',
+          completedTasks: 8,
+          totalTasks: 12,
+          focusHours: 4.5,
+          productivityScore: 87,
+        };
+      case 'week':
+        return {
+          ...baseData,
+          score: 892,
+          change: '+67',
+          completedTasks: 42,
+          totalTasks: 58,
+          focusHours: 28.5,
+          productivityScore: 84,
+        };
+      case 'month':
+        return {
+          ...baseData,
+          score: 3247,
+          change: '+234',
+          completedTasks: 156,
+          totalTasks: 201,
+          focusHours: 98.2,
+          productivityScore: 89,
+        };
+      case 'alltime':
+        return {
+          ...baseData,
+          score: 15483,
+          change: '+1247',
+          completedTasks: 742,
+          totalTasks: 963,
+          focusHours: 423.7,
+          productivityScore: 91,
+        };
+      default:
+        return baseData;
+    }
+  };
+
+  const personalProgress = generatePersonalProgress(activeProgressPeriod);
 
   return (
     <div style={{
@@ -743,6 +800,248 @@ export const Leaderboard: React.FC = () => {
           }}>
             Leaderboard
           </h1>
+
+          {/* Personal Progress Section */}
+          <Card style={{
+            marginBottom: spacing.xl,
+            background: `linear-gradient(135deg, ${colors.primary}10 0%, ${colors.secondary}05 100%)`,
+            border: `1px solid ${colors.primary}20`,
+          }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: spacing.lg,
+              flexWrap: 'wrap',
+              gap: spacing.md,
+            }}>
+              <h2 style={{
+                fontSize: '1.5rem',
+                fontWeight: '600',
+                color: colors.textPrimary,
+                margin: 0,
+                display: 'flex',
+                alignItems: 'center',
+                gap: spacing.sm,
+              }}>
+                <motion.div
+                  style={{
+                    width: '32px',
+                    height: '32px',
+                    backgroundColor: colors.primary,
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '0.9rem',
+                    fontWeight: '700',
+                    color: colors.textPrimary,
+                  }}
+                  whileHover={{ scale: 1.1 }}
+                >
+                  JD
+                </motion.div>
+                My Progress
+              </h2>
+              
+              {/* Time Period Selector */}
+              <div style={{
+                display: 'flex',
+                gap: spacing.xs,
+                flexWrap: 'wrap',
+              }}>
+                {[
+                  { id: 'today' as const, label: 'Today' },
+                  { id: 'week' as const, label: 'This Week' },
+                  { id: 'month' as const, label: 'This Month' },
+                  { id: 'alltime' as const, label: 'All Time' }
+                ].map((period) => (
+                  <motion.button
+                    key={period.id}
+                    onClick={() => setActiveProgressPeriod(period.id)}
+                    style={{
+                      padding: `${spacing.sm} ${spacing.md}`,
+                      borderRadius: '8px',
+                      border: 'none',
+                      backgroundColor: activeProgressPeriod === period.id ? colors.primary : colors.surfaceLight,
+                      color: activeProgressPeriod === period.id ? colors.textPrimary : colors.textSecondary,
+                      fontSize: '0.85rem',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                    }}
+                    whileHover={{
+                      backgroundColor: activeProgressPeriod === period.id ? colors.primaryDark : colors.surface,
+                    }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    {period.label}
+                  </motion.button>
+                ))}
+              </div>
+            </div>
+
+            {/* Progress Stats Grid */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+              gap: spacing.lg,
+              marginBottom: spacing.lg,
+            }}>
+              {/* Rank Card */}
+              <motion.div
+                style={{
+                  padding: spacing.lg,
+                  backgroundColor: `${colors.surface}80`,
+                  borderRadius: '12px',
+                  border: `1px solid ${colors.surfaceLight}`,
+                  textAlign: 'center',
+                }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4 }}
+                whileHover={{ backgroundColor: `${colors.surface}90` }}
+              >
+                <div style={{
+                  fontSize: '2rem',
+                  fontWeight: '700',
+                  color: colors.primary,
+                  marginBottom: spacing.sm,
+                }}>
+                  #{personalProgress.rank}
+                </div>
+                <div style={{
+                  fontSize: '0.9rem',
+                  color: colors.textSecondary,
+                  marginBottom: spacing.xs,
+                }}>
+                  Current Rank
+                </div>
+                <div style={{
+                  fontSize: '0.8rem',
+                  color: colors.textMuted,
+                }}>
+                  of {personalProgress.totalParticipants} {activeTab === 'group' ? 'teams' : 'players'}
+                </div>
+              </motion.div>
+
+              {/* Score Card */}
+              <motion.div
+                style={{
+                  padding: spacing.lg,
+                  backgroundColor: `${colors.surface}80`,
+                  borderRadius: '12px',
+                  border: `1px solid ${colors.surfaceLight}`,
+                  textAlign: 'center',
+                }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.1 }}
+                whileHover={{ backgroundColor: `${colors.surface}90` }}
+              >
+                <div style={{
+                  fontSize: '2rem',
+                  fontWeight: '700',
+                  color: colors.secondary,
+                  marginBottom: spacing.sm,
+                }}>
+                  {personalProgress.score?.toLocaleString()}
+                </div>
+                <div style={{
+                  fontSize: '0.9rem',
+                  color: colors.textSecondary,
+                  marginBottom: spacing.xs,
+                }}>
+                  Total Score
+                </div>
+                <div style={{
+                  fontSize: '0.8rem',
+                  fontWeight: '600',
+                  color: personalProgress.change?.startsWith('+') ? colors.success : colors.error,
+                  backgroundColor: personalProgress.change?.startsWith('+') ? `${colors.success}20` : `${colors.error}20`,
+                  padding: `${spacing.xs} ${spacing.sm}`,
+                  borderRadius: '4px',
+                  display: 'inline-block',
+                }}>
+                  {personalProgress.change}
+                </div>
+              </motion.div>
+
+              {/* Tasks Card */}
+              <motion.div
+                style={{
+                  padding: spacing.lg,
+                  backgroundColor: `${colors.surface}80`,
+                  borderRadius: '12px',
+                  border: `1px solid ${colors.surfaceLight}`,
+                  textAlign: 'center',
+                }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.2 }}
+                whileHover={{ backgroundColor: `${colors.surface}90` }}
+              >
+                <div style={{
+                  fontSize: '2rem',
+                  fontWeight: '700',
+                  color: colors.success,
+                  marginBottom: spacing.sm,
+                }}>
+                  {personalProgress.completedTasks}/{personalProgress.totalTasks}
+                </div>
+                <div style={{
+                  fontSize: '0.9rem',
+                  color: colors.textSecondary,
+                  marginBottom: spacing.xs,
+                }}>
+                  Tasks Completed
+                </div>
+                <div style={{
+                  fontSize: '0.8rem',
+                  color: colors.textMuted,
+                }}>
+                  {Math.round((personalProgress.completedTasks / personalProgress.totalTasks) * 100)}% completion
+                </div>
+              </motion.div>
+
+              {/* Focus Hours Card */}
+              <motion.div
+                style={{
+                  padding: spacing.lg,
+                  backgroundColor: `${colors.surface}80`,
+                  borderRadius: '12px',
+                  border: `1px solid ${colors.surfaceLight}`,
+                  textAlign: 'center',
+                }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.3 }}
+                whileHover={{ backgroundColor: `${colors.surface}90` }}
+              >
+                <div style={{
+                  fontSize: '2rem',
+                  fontWeight: '700',
+                  color: colors.primary,
+                  marginBottom: spacing.sm,
+                }}>
+                  {personalProgress.focusHours}h
+                </div>
+                <div style={{
+                  fontSize: '0.9rem',
+                  color: colors.textSecondary,
+                  marginBottom: spacing.xs,
+                }}>
+                  Focus Time
+                </div>
+                <div style={{
+                  fontSize: '0.8rem',
+                  color: colors.textMuted,
+                }}>
+                  Productivity: {personalProgress.productivityScore}%
+                </div>
+              </motion.div>
+            </div>
+          </Card>
 
           {/* Tabs */}
           <Card style={{
