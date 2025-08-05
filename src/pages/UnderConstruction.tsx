@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Construction, User } from 'lucide-react';
+import { Construction, User, AlertCircle } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import Sidebar from '../components/Sidebar';
 import { Card } from '../components/ui/card';
 import { colors, fonts, spacing } from '../utils/theme';
+import { useUserInfo, useUserGraph, useApiError, useLeaderboard } from '../hooks/useApi';
+import { useAuthContext } from '../hooks/hooks';
 
 interface UnderConstructionProps {
   title: string;
@@ -19,7 +21,7 @@ interface LeaderboardEntry {
   avatar?: string;
 }
 
-type TabType = 'group' | 'individual';
+type TabType = 'team' | 'individual';
 
 const UnderConstruction: React.FC<UnderConstructionProps> = ({ title, description }) => {
   return (
@@ -144,93 +146,94 @@ const UnderConstruction: React.FC<UnderConstructionProps> = ({ title, descriptio
 
 // Settings Component
 export const Settings: React.FC = () => {
-  const [selectedTimeRange, setSelectedTimeRange] = useState<string>('30days');
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [selectedTimeRange, setSelectedTimeRange] = useState<'week' | '30days' | 'all_time'>('30days');
+  const { logout } = useAuthContext();
+  
+  // Fetch user info and graph data
+  const { data: userInfo, isLoading: userLoading, error: userError } = useUserInfo();
+  const { data: graphData, isLoading: graphLoading, error: graphError } = useUserGraph(selectedTimeRange);
+  
+  const userErrorMessage = useApiError(userError);
+  const graphErrorMessage = useApiError(graphError);
 
-  // Enhanced mock data for historical progress
-  const generateHistoricalData = (range: string) => {
-    const now = new Date();
-    let data = [];
-    
-    switch (range) {
-      case '30days':
-        for (let i = 29; i >= 0; i--) {
-          const date = new Date(now);
-          date.setDate(date.getDate() - i);
-          data.push({
-            date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-            fullDate: date.toISOString().split('T')[0],
-            tasks: Math.floor(Math.random() * 15) + 5,
-            productivity: Math.floor(Math.random() * 40) + 60,
-            focus: Math.floor(Math.random() * 8) + 4,
-          });
-        }
-        break;
-      case '3months':
-        for (let i = 11; i >= 0; i--) {
-          const date = new Date(now);
-          date.setMonth(date.getMonth() - i);
-          data.push({
-            date: date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
-            fullDate: date.toISOString().split('T')[0],
-            tasks: Math.floor(Math.random() * 300) + 200,
-            productivity: Math.floor(Math.random() * 40) + 60,
-            focus: Math.floor(Math.random() * 200) + 120,
-          });
-        }
-        break;
-      case '6months':
-        for (let i = 5; i >= 0; i--) {
-          const date = new Date(now);
-          date.setMonth(date.getMonth() - i);
-          data.push({
-            date: date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
-            fullDate: date.toISOString().split('T')[0],
-            tasks: Math.floor(Math.random() * 600) + 400,
-            productivity: Math.floor(Math.random() * 40) + 60,
-            focus: Math.floor(Math.random() * 400) + 250,
-          });
-        }
-        break;
-      case '1year':
-        for (let i = 11; i >= 0; i--) {
-          const date = new Date(now);
-          date.setMonth(date.getMonth() - i);
-          data.push({
-            date: date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
-            fullDate: date.toISOString().split('T')[0],
-            tasks: Math.floor(Math.random() * 1200) + 800,
-            productivity: Math.floor(Math.random() * 40) + 60,
-            focus: Math.floor(Math.random() * 800) + 500,
-          });
-        }
-        break;
-      default:
-        data = [];
-    }
-    
-    return data;
+  // Check if user is career associate for role-based access
+  const isCareerAssociate = userInfo?.role === 'career-associate';
+
+  const handleTimeRangeChange = (range: 'week' | '30days' | 'all_time') => {
+    setSelectedTimeRange(range);
   };
 
-  const [chartData, setChartData] = useState(generateHistoricalData(selectedTimeRange));
-
-  const handleTimeRangeChange = (range: string) => {
-    setIsLoading(true);
-    setSelectedTimeRange(range);
-    
-    // Simulate API call delay
-    setTimeout(() => {
-      setChartData(generateHistoricalData(range));
-      setIsLoading(false);
-    }, 500);
+  const handleLogout = () => {
+    logout();
   };
 
   const timeRangeOptions = [
-    { value: '30days', label: 'Last 30 Days' },
-    { value: '3months', label: 'Last 3 Months' },
-    { value: '6months', label: 'Last 6 Months' },
-    { value: '1year', label: 'Last Year' },
+    { value: 'week' as const, label: 'Last Week' },
+    { value: '30days' as const, label: 'Last 30 Days' },
+    { value: 'all_time' as const, label: 'All Time' },
   ];
+
+  // Get display name and email
+  const displayName = userInfo?.username || 'User';
+  const displayEmail = `${displayName.toLowerCase().replace(/\s+/g, '.')}@applywizz.com`;
+  const initials = displayName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'JD';
+
+  // Get role display info
+  const getRoleInfo = (role?: string) => {
+    switch (role) {
+      case 'career-associate':
+        return {
+          label: 'Career Associate',
+          emoji: '🎯',
+          description: 'Help candidates navigate their career journey',
+          skills: ['Goal Tracking', 'Time Management', 'Analytics']
+        };
+      case 'tech-engineer':
+        return {
+          label: 'Tech Engineer',
+          emoji: '⚡',
+          description: 'Build and maintain technical solutions',
+          skills: ['Development', 'Problem Solving', 'Innovation']
+        };
+      case 'resume-team':
+        return {
+          label: 'Resume Team Folk',
+          emoji: '📝',
+          description: 'Craft compelling resumes and profiles',
+          skills: ['Writing', 'Design', 'Optimization']
+        };
+      case 'product-manager':
+        return {
+          label: 'Product Manager',
+          emoji: '📊',
+          description: 'Drive product strategy and development',
+          skills: ['Strategy', 'Leadership', 'Analysis']
+        };
+      case 'data-analyst':
+        return {
+          label: 'Data Analyst',
+          emoji: '📈',
+          description: 'Analyze trends and provide insights',
+          skills: ['Analytics', 'Insights', 'Reporting']
+        };
+      case 'customer-success':
+        return {
+          label: 'Customer Success',
+          emoji: '🤝',
+          description: 'Ensure client satisfaction and growth',
+          skills: ['Communication', 'Support', 'Growth']
+        };
+      default:
+        return {
+          label: 'Team Member',
+          emoji: '👤',
+          description: 'Contributing to the team success',
+          skills: ['Collaboration', 'Communication', 'Growth']
+        };
+    }
+  };
+
+  const roleInfo = getRoleInfo(userInfo?.role);
 
   return (
     <div style={{
@@ -299,7 +302,7 @@ export const Settings: React.FC = () => {
                 position: 'relative',
                 boxShadow: `0 8px 32px ${colors.primary}40`,
               }}>
-                JD
+                {initials}
                 {/* Status indicator */}
                 <div style={{
                   position: 'absolute',
@@ -327,7 +330,7 @@ export const Settings: React.FC = () => {
                 margin: 0,
                 marginBottom: spacing.xs,
               }}>
-                John Doe
+                {userLoading ? 'Loading...' : displayName}
               </h2>
               <p style={{
                 color: colors.textSecondary,
@@ -335,8 +338,31 @@ export const Settings: React.FC = () => {
                 fontSize: '1rem',
                 marginBottom: spacing['2xl'],
               }}>
-                john.doe@applywizz.com
+                {displayEmail}
               </p>
+
+              {/* Error display for user info */}
+              {userErrorMessage && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  style={{
+                    marginBottom: spacing.lg,
+                    padding: spacing.md,
+                    backgroundColor: `${colors.error}20`,
+                    borderRadius: "8px",
+                    fontSize: "0.9rem",
+                    color: colors.error,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: spacing.sm,
+                    justifyContent: "center",
+                  }}
+                >
+                  <AlertCircle size={16} />
+                  {userErrorMessage}
+                </motion.div>
+              )}
             </motion.div>
           </Card>
 
@@ -426,7 +452,7 @@ export const Settings: React.FC = () => {
                 color: colors.textPrimary,
                 boxShadow: `0 4px 12px ${colors.secondary}40`,
               }}>
-                🎯
+                {roleInfo.emoji}
               </div>
               
               <div style={{ flex: 1 }}>
@@ -437,7 +463,7 @@ export const Settings: React.FC = () => {
                   margin: 0,
                   marginBottom: spacing.xs,
                 }}>
-                  Productivity Specialist
+                  {roleInfo.label}
                 </h4>
                 <p style={{
                   fontSize: '0.9rem',
@@ -445,14 +471,14 @@ export const Settings: React.FC = () => {
                   margin: 0,
                   marginBottom: spacing.xs,
                 }}>
-                  Focused on optimizing workflows and achieving goals efficiently
+                  {roleInfo.description}
                 </p>
                 <div style={{
                   display: 'flex',
                   gap: spacing.xs,
                   flexWrap: 'wrap',
                 }}>
-                  {['Goal Tracking', 'Time Management', 'Analytics'].map((skill) => (
+                  {roleInfo.skills.map((skill) => (
                     <span
                       key={skill}
                       style={{
@@ -471,191 +497,247 @@ export const Settings: React.FC = () => {
               </div>
             </motion.div>
           </Card>
-          <Card style={{ 
-            padding: spacing['2xl'], 
-            marginBottom: spacing.xl,
-          }}>
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
+
+          {/* Progress Graph - Only for Career Associates */}
+          {isCareerAssociate ? (
+            <Card style={{ 
+              padding: spacing['2xl'], 
               marginBottom: spacing.xl,
-              flexWrap: 'wrap',
-              gap: spacing.md,
             }}>
-              <h3 style={{
-                fontSize: '1.5rem',
-                fontWeight: '700',
-                color: colors.textPrimary,
-                margin: 0,
-              }}>
-                Progress Overview
-              </h3>
-              
-              {/* Time Range Selector */}
               <div style={{
                 display: 'flex',
-                gap: spacing.sm,
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: spacing.xl,
+                flexWrap: 'wrap',
+                gap: spacing.md,
+              }}>
+                <h3 style={{
+                  fontSize: '1.5rem',
+                  fontWeight: '700',
+                  color: colors.textPrimary,
+                  margin: 0,
+                }}>
+                  Progress Overview
+                </h3>
+                
+                {/* Time Range Selector */}
+                <div style={{
+                  display: 'flex',
+                  gap: spacing.sm,
+                  flexWrap: 'wrap',
+                }}>
+                  {timeRangeOptions.map((option) => (
+                    <motion.button
+                      key={option.value}
+                      onClick={() => handleTimeRangeChange(option.value)}
+                      disabled={graphLoading}
+                      style={{
+                        padding: `${spacing.sm} ${spacing.md}`,
+                        borderRadius: '8px',
+                        border: 'none',
+                        backgroundColor: selectedTimeRange === option.value ? colors.primary : colors.surfaceLight,
+                        color: selectedTimeRange === option.value ? colors.textPrimary : colors.textSecondary,
+                        fontSize: '0.85rem',
+                        fontWeight: '600',
+                        cursor: graphLoading ? 'not-allowed' : 'pointer',
+                        opacity: graphLoading ? 0.6 : 1,
+                        transition: 'all 0.2s ease',
+                      }}
+                      whileHover={!graphLoading ? {
+                        backgroundColor: selectedTimeRange === option.value ? colors.primaryDark : colors.surface,
+                      } : {}}
+                      whileTap={!graphLoading ? { scale: 0.95 } : {}}
+                    >
+                      {option.label}
+                    </motion.button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Error message for graph data */}
+              {graphErrorMessage && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  style={{
+                    marginBottom: spacing.lg,
+                    padding: spacing.md,
+                    backgroundColor: `${colors.error}20`,
+                    borderRadius: "8px",
+                    fontSize: "0.9rem",
+                    color: colors.error,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: spacing.sm,
+                  }}
+                >
+                  <AlertCircle size={16} />
+                  {graphErrorMessage}
+                </motion.div>
+              )}
+
+              {/* Chart Container */}
+              <motion.div
+                style={{
+                  height: '400px',
+                  width: '100%',
+                  position: 'relative',
+                  opacity: graphLoading ? 0.5 : 1,
+                  transition: 'opacity 0.3s ease',
+                }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: graphLoading ? 0.5 : 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.4 }}
+              >
+                {graphLoading && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    zIndex: 10,
+                  }}>
+                    <motion.div
+                      style={{
+                        width: '32px',
+                        height: '32px',
+                        border: `3px solid ${colors.surfaceLight}`,
+                        borderTop: `3px solid ${colors.primary}`,
+                        borderRadius: '50%',
+                      }}
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    />
+                  </div>
+                )}
+                
+                {graphData?.data && (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart
+                      data={graphData.data}
+                      margin={{
+                        top: 20,
+                        right: 30,
+                        left: 20,
+                        bottom: 20,
+                      }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke={colors.surfaceLight} />
+                      <XAxis 
+                        dataKey="date" 
+                        stroke={colors.textSecondary}
+                        fontSize={12}
+                      />
+                      <YAxis 
+                        stroke={colors.textSecondary}
+                        fontSize={12}
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: colors.surface,
+                          border: `1px solid ${colors.surfaceLight}`,
+                          borderRadius: '8px',
+                          color: colors.textPrimary,
+                          fontSize: '0.875rem',
+                        }}
+                        labelStyle={{ color: colors.textSecondary }}
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="tasks" 
+                        stroke={colors.primary}
+                        strokeWidth={3}
+                        dot={{ fill: colors.primary, strokeWidth: 2, r: 4 }}
+                        activeDot={{ r: 6, fill: colors.primaryLight }}
+                        name="Tasks Completed"
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="productivity" 
+                        stroke={colors.secondary}
+                        strokeWidth={2}
+                        dot={{ fill: colors.secondary, strokeWidth: 2, r: 3 }}
+                        activeDot={{ r: 5, fill: colors.secondaryLight }}
+                        name="Productivity %"
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="focus" 
+                        stroke={colors.success}
+                        strokeWidth={2}
+                        dot={{ fill: colors.success, strokeWidth: 2, r: 3 }}
+                        activeDot={{ r: 5, fill: '#34d399' }}
+                        name="Focus Hours"
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                )}
+              </motion.div>
+
+              {/* Chart Legend */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                gap: spacing.xl,
+                marginTop: spacing.lg,
                 flexWrap: 'wrap',
               }}>
-                {timeRangeOptions.map((option) => (
-                  <motion.button
-                    key={option.value}
-                    onClick={() => handleTimeRangeChange(option.value)}
-                    disabled={isLoading}
-                    style={{
-                      padding: `${spacing.sm} ${spacing.md}`,
-                      borderRadius: '8px',
-                      border: 'none',
-                      backgroundColor: selectedTimeRange === option.value ? colors.primary : colors.surfaceLight,
-                      color: selectedTimeRange === option.value ? colors.textPrimary : colors.textSecondary,
-                      fontSize: '0.85rem',
-                      fontWeight: '600',
-                      cursor: isLoading ? 'not-allowed' : 'pointer',
-                      opacity: isLoading ? 0.6 : 1,
-                      transition: 'all 0.2s ease',
-                    }}
-                    whileHover={!isLoading ? {
-                      backgroundColor: selectedTimeRange === option.value ? colors.primaryDark : colors.surface,
-                    } : {}}
-                    whileTap={!isLoading ? { scale: 0.95 } : {}}
-                  >
-                    {option.label}
-                  </motion.button>
+                {[
+                  { color: colors.primary, label: 'Tasks Completed' },
+                  { color: colors.secondary, label: 'Productivity %' },
+                  { color: colors.success, label: 'Focus Hours' },
+                ].map((item) => (
+                  <div key={item.label} style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: spacing.sm,
+                  }}>
+                    <div style={{
+                      width: '12px',
+                      height: '12px',
+                      backgroundColor: item.color,
+                      borderRadius: '50%',
+                    }} />
+                    <span style={{
+                      fontSize: '0.875rem',
+                      color: colors.textSecondary,
+                    }}>
+                      {item.label}
+                    </span>
+                  </div>
                 ))}
               </div>
-            </div>
-
-            {/* Chart Container */}
-            <motion.div
-              style={{
-                height: '400px',
-                width: '100%',
-                position: 'relative',
-                opacity: isLoading ? 0.5 : 1,
-                transition: 'opacity 0.3s ease',
-              }}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: isLoading ? 0.5 : 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.4 }}
-            >
-              {isLoading && (
-                <div style={{
-                  position: 'absolute',
-                  top: '50%',
-                  left: '50%',
-                  transform: 'translate(-50%, -50%)',
-                  zIndex: 10,
-                }}>
-                  <motion.div
-                    style={{
-                      width: '32px',
-                      height: '32px',
-                      border: `3px solid ${colors.surfaceLight}`,
-                      borderTop: `3px solid ${colors.primary}`,
-                      borderRadius: '50%',
-                    }}
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                  />
-                </div>
-              )}
-              
-              <LineChart
-                width={window.innerWidth >= 768 ? 800 : 300}
-                height={400}
-                data={chartData}
-                margin={{
-                  top: 20,
-                  right: 30,
-                  left: 20,
-                  bottom: 20,
-                }}
-              >
-                <CartesianGrid strokeDasharray="3 3" stroke={colors.surfaceLight} />
-                <XAxis 
-                  dataKey="date" 
-                  stroke={colors.textSecondary}
-                  fontSize={12}
-                />
-                <YAxis 
-                  stroke={colors.textSecondary}
-                  fontSize={12}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: colors.surface,
-                    border: `1px solid ${colors.surfaceLight}`,
-                    borderRadius: '8px',
-                    color: colors.textPrimary,
-                    fontSize: '0.875rem',
-                  }}
-                  labelStyle={{ color: colors.textSecondary }}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="tasks" 
-                  stroke={colors.primary}
-                  strokeWidth={3}
-                  dot={{ fill: colors.primary, strokeWidth: 2, r: 4 }}
-                  activeDot={{ r: 6, fill: colors.primaryLight }}
-                  name="Tasks Completed"
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="productivity" 
-                  stroke={colors.secondary}
-                  strokeWidth={2}
-                  dot={{ fill: colors.secondary, strokeWidth: 2, r: 3 }}
-                  activeDot={{ r: 5, fill: colors.secondaryLight }}
-                  name="Productivity %"
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="focus" 
-                  stroke={colors.success}
-                  strokeWidth={2}
-                  dot={{ fill: colors.success, strokeWidth: 2, r: 3 }}
-                  activeDot={{ r: 5, fill: '#34d399' }}
-                  name="Focus Hours"
-                />
-              </LineChart>
-            </motion.div>
-
-            {/* Chart Legend */}
-            <div style={{
-              display: 'flex',
-              justifyContent: 'center',
-              gap: spacing.xl,
-              marginTop: spacing.lg,
-              flexWrap: 'wrap',
+            </Card>
+          ) : (
+            /* Alternative message for non-career associates */
+            <Card style={{
+              padding: spacing['2xl'],
+              marginBottom: spacing.xl,
+              textAlign: 'center',
+              border: `1px solid ${colors.primary}20`,
+              backgroundColor: `${colors.primary}05`,
             }}>
-              {[
-                { color: colors.primary, label: 'Tasks Completed' },
-                { color: colors.secondary, label: 'Productivity %' },
-                { color: colors.success, label: 'Focus Hours' },
-              ].map((item) => (
-                <div key={item.label} style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: spacing.sm,
-                }}>
-                  <div style={{
-                    width: '12px',
-                    height: '12px',
-                    backgroundColor: item.color,
-                    borderRadius: '50%',
-                  }} />
-                  <span style={{
-                    fontSize: '0.875rem',
-                    color: colors.textSecondary,
-                  }}>
-                    {item.label}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </Card>
+              <h3 style={{
+                fontSize: '1.25rem',
+                fontWeight: '600',
+                color: colors.textPrimary,
+                margin: 0,
+                marginBottom: spacing.md,
+              }}>
+                Progress Analytics
+              </h3>
+              <p style={{
+                color: colors.textSecondary,
+                margin: 0,
+                fontSize: '1rem',
+                lineHeight: 1.6,
+              }}>
+                Detailed progress tracking and analytics are available for Career Associates. 
+                Your current role provides access to Thanos HP tracking and leaderboard features.
+              </p>
+            </Card>
+          )}
 
           {/* Logout Section */}
           <Card style={{
@@ -664,6 +746,7 @@ export const Settings: React.FC = () => {
             backgroundColor: `${colors.error}05`,
           }}>
             <motion.button
+              onClick={handleLogout}
               style={{
                 width: '100%',
                 padding: spacing.lg,
@@ -690,38 +773,23 @@ export const Settings: React.FC = () => {
 
 // Leaderboard Component
 export const Leaderboard: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<TabType>('group');
-  const [activeProgressPeriod, setActiveProgressPeriod] = useState<'today' | 'week' | 'month' | 'alltime'>('today');
+  const [activeTab, setActiveTab] = useState<TabType>('individual');
+  const [activeProgressPeriod, setActiveProgressPeriod] = useState<'today' | 'week' | 'this_month' | 'all_time'>('today');
 
-  const groupLeaderboard: LeaderboardEntry[] = [
-    { rank: 1, name: 'Team Alpha', score: 2450, change: '+12' },
-    { rank: 2, name: 'Team Beta', score: 2380, change: '+8' },
-    { rank: 3, name: 'Team Gamma', score: 2290, change: '-3' },
-    { rank: 4, name: 'Team Delta', score: 2150, change: '+5' },
-    { rank: 5, name: 'Team Epsilon', score: 2080, change: '+2' },
-    { rank: 6, name: 'Team Zeta', score: 1950, change: '+1' },
-    { rank: 7, name: 'Team Eta', score: 1820, change: '-2' },
-    { rank: 8, name: 'Team Theta', score: 1750, change: '+3' },
-    { rank: 9, name: 'Team Iota', score: 1680, change: '-1' },
-    { rank: 10, name: 'Team Kappa', score: 1550, change: '+4' },
-  ];
+  // Fetch leaderboard data from API
+  const { data: leaderboardData, isLoading, error } = useLeaderboard(activeProgressPeriod, activeTab);
+  const { data: userInfo } = useUserInfo();
+  const errorMessage = useApiError(error);
 
-  const individualLeaderboard: LeaderboardEntry[] = Array.from({ length: 70 }, (_, index) => ({
-    rank: index + 1,
-    name: `User ${index + 1}`,
-    score: Math.floor(Math.random() * 2000) + 500,
-    change: Math.random() > 0.5 ? `+${Math.floor(Math.random() * 20)}` : `-${Math.floor(Math.random() * 10)}`,
-    avatar: `U${index + 1}`,
-  }));
+  // Use API data or fallback to mock data
+  const currentData = leaderboardData?.entries || [];
 
-  const currentData = activeTab === 'group' ? groupLeaderboard : individualLeaderboard;
-
-  // Personal progress data for the current user
-  const generatePersonalProgress = (period: 'today' | 'week' | 'month' | 'alltime') => {
+  // Personal progress data for the current user - this could be extracted from leaderboard data
+  const generatePersonalProgress = (period: 'today' | 'week' | 'this_month' | 'all_time') => {
     const baseData = {
-      rank: 23, // User's current rank
-      totalParticipants: activeTab === 'group' ? 45 : 156,
-      name: 'John Doe', // Current user name
+      rank: 23, // User's current rank - could come from API
+      totalParticipants: currentData.length || (activeTab === 'individual' ? 156 : 45),
+      name: userInfo?.username || 'You',
     };
 
     switch (period) {
@@ -745,7 +813,7 @@ export const Leaderboard: React.FC = () => {
           focusHours: 28.5,
           productivityScore: 84,
         };
-      case 'month':
+      case 'this_month':
         return {
           ...baseData,
           score: 3247,
@@ -755,7 +823,7 @@ export const Leaderboard: React.FC = () => {
           focusHours: 98.2,
           productivityScore: 89,
         };
-      case 'alltime':
+      case 'all_time':
         return {
           ...baseData,
           score: 15483,
@@ -801,6 +869,119 @@ export const Leaderboard: React.FC = () => {
             Leaderboard
           </h1>
 
+          {/* Time Period Selector - At Leaderboard Level */}
+          <Card style={{
+            marginBottom: spacing.xl,
+            padding: spacing.md,
+            backgroundColor: colors.surface,
+          }}>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: spacing.md,
+            }}>
+              <h2 style={{
+                fontSize: '1.25rem',
+                fontWeight: '600',
+                color: colors.textPrimary,
+                margin: 0,
+              }}>
+                Time Period
+              </h2>
+              
+              <div style={{
+                display: 'flex',
+                gap: spacing.xs,
+                flexWrap: 'wrap',
+              }}>
+                {[
+                  { id: 'today' as const, label: 'Today' },
+                  { id: 'week' as const, label: 'This Week' },
+                  { id: 'this_month' as const, label: 'This Month' },
+                  { id: 'all_time' as const, label: 'All Time' }
+                ].map((period) => (
+                  <motion.button
+                    key={period.id}
+                    onClick={() => setActiveProgressPeriod(period.id)}
+                    disabled={isLoading}
+                    style={{
+                      padding: `${spacing.sm} ${spacing.md}`,
+                      borderRadius: '8px',
+                      border: 'none',
+                      backgroundColor: activeProgressPeriod === period.id ? colors.primary : colors.surfaceLight,
+                      color: activeProgressPeriod === period.id ? colors.textPrimary : colors.textSecondary,
+                      fontSize: '0.85rem',
+                      fontWeight: '600',
+                      cursor: isLoading ? 'not-allowed' : 'pointer',
+                      opacity: isLoading ? 0.6 : 1,
+                      transition: 'all 0.2s ease',
+                    }}
+                    whileHover={!isLoading ? {
+                      backgroundColor: activeProgressPeriod === period.id ? colors.primaryDark : colors.surface,
+                    } : {}}
+                    whileTap={!isLoading ? { scale: 0.95 } : {}}
+                  >
+                    {period.label}
+                  </motion.button>
+                ))}
+              </div>
+            </div>
+          </Card>
+
+          {/* Error message */}
+          {errorMessage && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              style={{
+                marginBottom: spacing.xl,
+                padding: spacing.md,
+                backgroundColor: `${colors.error}20`,
+                borderRadius: "8px",
+                fontSize: "0.9rem",
+                color: colors.error,
+                display: "flex",
+                alignItems: "center",
+                gap: spacing.sm,
+              }}
+            >
+              <AlertCircle size={16} />
+              {errorMessage}
+            </motion.div>
+          )}
+
+          {/* Loading indicator */}
+          {isLoading && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              style={{
+                marginBottom: spacing.xl,
+                display: "flex",
+                alignItems: "center",
+                gap: spacing.sm,
+                justifyContent: "center",
+                color: colors.textSecondary,
+                padding: spacing.lg,
+              }}
+            >
+              <motion.div
+                style={{
+                  width: "20px",
+                  height: "20px",
+                  border: `2px solid ${colors.surfaceLight}`,
+                  borderTop: `2px solid ${colors.primary}`,
+                  borderRadius: "50%",
+                }}
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+              />
+              Loading leaderboard data...
+            </motion.div>
+          )}
+
           {/* Personal Progress Section */}
           <Card style={{
             marginBottom: spacing.xl,
@@ -839,46 +1020,10 @@ export const Leaderboard: React.FC = () => {
                   }}
                   whileHover={{ scale: 1.1 }}
                 >
-                  JD
+                  {userInfo?.username?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'YO'}
                 </motion.div>
                 My Progress
               </h2>
-              
-              {/* Time Period Selector */}
-              <div style={{
-                display: 'flex',
-                gap: spacing.xs,
-                flexWrap: 'wrap',
-              }}>
-                {[
-                  { id: 'today' as const, label: 'Today' },
-                  { id: 'week' as const, label: 'This Week' },
-                  { id: 'month' as const, label: 'This Month' },
-                  { id: 'alltime' as const, label: 'All Time' }
-                ].map((period) => (
-                  <motion.button
-                    key={period.id}
-                    onClick={() => setActiveProgressPeriod(period.id)}
-                    style={{
-                      padding: `${spacing.sm} ${spacing.md}`,
-                      borderRadius: '8px',
-                      border: 'none',
-                      backgroundColor: activeProgressPeriod === period.id ? colors.primary : colors.surfaceLight,
-                      color: activeProgressPeriod === period.id ? colors.textPrimary : colors.textSecondary,
-                      fontSize: '0.85rem',
-                      fontWeight: '600',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease',
-                    }}
-                    whileHover={{
-                      backgroundColor: activeProgressPeriod === period.id ? colors.primaryDark : colors.surface,
-                    }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    {period.label}
-                  </motion.button>
-                ))}
-              </div>
             </div>
 
             {/* Progress Stats Grid */}
@@ -921,7 +1066,7 @@ export const Leaderboard: React.FC = () => {
                   fontSize: '0.8rem',
                   color: colors.textMuted,
                 }}>
-                  of {personalProgress.totalParticipants} {activeTab === 'group' ? 'teams' : 'players'}
+                  of {personalProgress.totalParticipants} {activeTab === 'team' ? 'teams' : 'players'}
                 </div>
               </motion.div>
 
@@ -1051,12 +1196,13 @@ export const Leaderboard: React.FC = () => {
             backgroundColor: colors.surface,
           }}>
             {[
-              { id: 'group' as const, label: `Teams (${groupLeaderboard.length})` },
-              { id: 'individual' as const, label: `Individuals (${individualLeaderboard.length})` }
+              { id: 'team' as const, label: `Teams` },
+              { id: 'individual' as const, label: `Individuals` }
             ].map((tab) => (
               <motion.button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
+                disabled={isLoading}
                 style={{
                   flex: 1,
                   padding: spacing.md,
@@ -1066,10 +1212,11 @@ export const Leaderboard: React.FC = () => {
                   borderRadius: '8px',
                   fontSize: '0.9rem',
                   fontWeight: '600',
-                  cursor: 'pointer',
+                  cursor: isLoading ? 'not-allowed' : 'pointer',
+                  opacity: isLoading ? 0.6 : 1,
                   transition: 'all 0.2s ease',
                 }}
-                whileTap={{ scale: 0.98 }}
+                whileTap={!isLoading ? { scale: 0.98 } : {}}
               >
                 {tab.label}
               </motion.button>
@@ -1138,14 +1285,14 @@ export const Leaderboard: React.FC = () => {
                       color: colors.textPrimary,
                       marginRight: spacing.md,
                     }}>
-                      {entry.avatar}
+                      {entry.avatar || entry.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
                     </div>
                   )}
 
                   {/* Name */}
                   <div style={{ 
                     flex: 1, 
-                    marginLeft: activeTab === 'group' ? spacing.md : 0 
+                    marginLeft: activeTab === 'team' ? spacing.md : 0 
                   }}>
                     <h3 style={{
                       fontSize: '1rem',
