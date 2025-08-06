@@ -7,10 +7,12 @@ import {
   Trophy,
   Zap,
   LucideIcon,
+  AlertCircle,
 } from "lucide-react";
 import Sidebar from "../components/Sidebar";
 import { Card, CardContent } from "../components/ui/card";
 import { colors, fonts, spacing } from "../utils/theme";
+import { useThanosHp, useTasksInfo, useApiError, useUserInfo } from "../hooks/useApi";
 
 interface ThanosCharacterProps {
   scrollY: MotionValue<number>;
@@ -189,7 +191,13 @@ const ThanosCharacter: React.FC<ThanosCharacterProps> = ({ scrollY }) => {
 };
 
 const HPBar: React.FC = () => {
-  const hp = 85;
+  const { data: thanosHp, isLoading, error } = useThanosHp();
+  const errorMessage = useApiError(error);
+  
+  // Use default values while loading or if data is not available
+  const hp = thanosHp?.hp ?? 85;
+  const totalHp = thanosHp?.total_hp ?? 100;
+  const hpPercentage = (hp / totalHp) * 100;
 
   return (
     <motion.div
@@ -218,15 +226,33 @@ const HPBar: React.FC = () => {
         >
           Power Level
         </span>
-        <span
-          style={{
-            color: colors.textPrimary,
-            fontSize: "1rem",
-            fontWeight: "700",
-          }}
-        >
-          {hp}/100
-        </span>
+        <div style={{ display: "flex", alignItems: "center", gap: spacing.xs }}>
+          {isLoading && (
+            <motion.div
+              style={{
+                width: "12px",
+                height: "12px",
+                border: `2px solid ${colors.surfaceLight}`,
+                borderTop: `2px solid ${colors.primary}`,
+                borderRadius: "50%",
+              }}
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+            />
+          )}
+          {errorMessage && (
+            <AlertCircle size={16} style={{ color: colors.error }} />
+          )}
+          <span
+            style={{
+              color: colors.textPrimary,
+              fontSize: "1rem",
+              fontWeight: "700",
+            }}
+          >
+            {hp}/{totalHp}
+          </span>
+        </div>
       </div>
 
       <div
@@ -246,21 +272,21 @@ const HPBar: React.FC = () => {
             left: 0,
             height: "100%",
             backgroundColor:
-              hp > 70
+              hpPercentage > 70
                 ? colors.hpFull
-                : hp > 30
+                : hpPercentage > 30
                 ? colors.hpMedium
                 : colors.hpLow,
             borderRadius: "6px",
             boxShadow:
-              hp > 70
+              hpPercentage > 70
                 ? `0 0 10px ${colors.hpFull}40`
-                : hp > 30
+                : hpPercentage > 30
                 ? `0 0 10px ${colors.hpMedium}40`
                 : `0 0 10px ${colors.hpLow}40`,
           }}
           initial={{ width: 0 }}
-          animate={{ width: `${hp}%` }}
+          animate={{ width: `${hpPercentage}%` }}
           transition={{ duration: 1.5, ease: "easeOut" }}
         />
 
@@ -279,6 +305,23 @@ const HPBar: React.FC = () => {
           transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
         />
       </div>
+
+      {errorMessage && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          style={{
+            marginTop: spacing.sm,
+            padding: spacing.sm,
+            backgroundColor: `${colors.error}20`,
+            borderRadius: "6px",
+            fontSize: "0.85rem",
+            color: colors.error,
+          }}
+        >
+          {errorMessage}
+        </motion.div>
+      )}
     </motion.div>
   );
 };
@@ -439,25 +482,34 @@ const Dashboard: React.FC = () => {
   const progressY = useTransform(scrollY, [200, 500], [100, 0]);
   const progressOpacity = useTransform(scrollY, [150, 300], [0, 1]);
 
+  // Fetch API data
+  const { data: tasksInfo, isLoading: tasksLoading, error: tasksError } = useTasksInfo();
+  const { data: userInfo, isLoading: userLoading } = useUserInfo();
+  const tasksErrorMessage = useApiError(tasksError);
+
+  // Check if user is career associate for role-based access
+  const isCareerAssociate = userInfo?.role === 'career-associate';
+  const showProgressCards = isCareerAssociate;
+
   const progressData: ProgressDataItem[] = [
     {
       icon: Target,
       title: "Today's Tasks",
-      value: "12",
+      value: tasksInfo?.today?.toString() ?? "12",
       subtitle: "+12% from yesterday",
       color: colors.success,
     },
     {
       icon: TrendingUp,
       title: "This Week",
-      value: "58",
+      value: tasksInfo?.week?.toString() ?? "58",
       subtitle: "+2% from last week",
       color: colors.primary,
     },
     {
       icon: Calendar,
       title: "This Month",
-      value: "98",
+      value: tasksInfo?.month?.toString() ?? "98",
       subtitle: "+5% from last month",
       color: colors.secondary,
     },
@@ -559,127 +611,248 @@ const Dashboard: React.FC = () => {
           </motion.div>
         </div>
 
-        {/* Progress Section - Separate scrollable area with improved styling */}
-        <motion.div
-          style={{
-            y: progressY,
-            opacity: progressOpacity,
-            padding: window.innerWidth >= 768 ? spacing["2xl"] : spacing.lg,
-            backgroundColor: colors.background,
-            position: "relative",
-            zIndex: 10,
-            minHeight: "100vh",
-            borderTop: `1px solid ${colors.surfaceLight}20`,
-            background: `linear-gradient(135deg, ${colors.background} 0%, ${colors.surface}20 50%, ${colors.background} 100%)`,
-          }}
-        >
+        {/* Progress Section - Only for Career Associates */}
+        {showProgressCards ? (
           <motion.div
             style={{
-              textAlign: "center",
-              marginBottom: spacing["3xl"],
+              y: progressY,
+              opacity: progressOpacity,
+              padding: window.innerWidth >= 768 ? spacing["2xl"] : spacing.lg,
+              backgroundColor: colors.background,
+              position: "relative",
+              zIndex: 10,
+              minHeight: "100vh",
+              borderTop: `1px solid ${colors.surfaceLight}20`,
+              background: `linear-gradient(135deg, ${colors.background} 0%, ${colors.surface}20 50%, ${colors.background} 100%)`,
             }}
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true }}
           >
-            <motion.h1
+            <motion.div
               style={{
-                fontSize: window.innerWidth >= 768 ? "2.5rem" : "2rem",
-                fontWeight: "800",
-                color: colors.textPrimary,
-                margin: 0,
-                marginBottom: spacing.lg,
-                background: `linear-gradient(135deg, ${colors.textPrimary} 0%, ${colors.primaryLight} 100%)`,
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                backgroundClip: "text",
+                textAlign: "center",
+                marginBottom: spacing["3xl"],
               }}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
+              transition={{ duration: 0.8 }}
               viewport={{ once: true }}
             >
-              Welcome Back, Hero
-            </motion.h1>
-            <motion.p
-              style={{
-                fontSize: window.innerWidth >= 768 ? "1.2rem" : "1rem",
-                color: colors.textSecondary,
-                margin: 0,
-                marginBottom: spacing.lg,
-                lineHeight: 1.6,
-              }}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.3 }}
-              viewport={{ once: true }}
-            >
-              Ready to balance productivity and achieve perfectly balanced
-              goals?
-            </motion.p>
-            <h2
-              style={{
-                fontSize: window.innerWidth >= 768 ? "2rem" : "1.5rem",
-                fontWeight: "700",
-                color: colors.textPrimary,
-                margin: 0,
-                marginBottom: spacing.md,
-                fontFamily: fonts.logo,
-              }}
-            >
-              Today's Progress
-            </h2>
-            <p
-              style={{
-                fontSize: "1rem",
-                color: colors.textSecondary,
-                margin: 0,
-                lineHeight: 1.6,
-              }}
-            >
-              Track your journey towards perfect balance
-            </p>
-          </motion.div>
+              <motion.h1
+                style={{
+                  fontSize: window.innerWidth >= 768 ? "2.5rem" : "2rem",
+                  fontWeight: "800",
+                  color: colors.textPrimary,
+                  margin: 0,
+                  marginBottom: spacing.lg,
+                  background: `linear-gradient(135deg, ${colors.textPrimary} 0%, ${colors.primaryLight} 100%)`,
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  backgroundClip: "text",
+                }}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.2 }}
+                viewport={{ once: true }}
+              >
+                Welcome Back, Hero
+              </motion.h1>
+              <motion.p
+                style={{
+                  fontSize: window.innerWidth >= 768 ? "1.2rem" : "1rem",
+                  color: colors.textSecondary,
+                  margin: 0,
+                  marginBottom: spacing.lg,
+                  lineHeight: 1.6,
+                }}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.3 }}
+                viewport={{ once: true }}
+              >
+                Ready to balance productivity and achieve perfectly balanced
+                goals?
+              </motion.p>
+              <h2
+                style={{
+                  fontSize: window.innerWidth >= 768 ? "2rem" : "1.5rem",
+                  fontWeight: "700",
+                  color: colors.textPrimary,
+                  margin: 0,
+                  marginBottom: spacing.md,
+                  fontFamily: fonts.logo,
+                }}
+              >
+                Today's Progress
+              </h2>
+              <p
+                style={{
+                  fontSize: "1rem",
+                  color: colors.textSecondary,
+                  margin: 0,
+                  lineHeight: 1.6,
+                }}
+              >
+                Track your journey towards perfect balance
+              </p>
 
-          {/* Progress Grid - Responsive and Centered */}
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              width: "100%",
-            }}
-          >
+              {/* Error message for tasks data */}
+              {tasksErrorMessage && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  style={{
+                    marginTop: spacing.lg,
+                    padding: spacing.md,
+                    backgroundColor: `${colors.error}20`,
+                    borderRadius: "8px",
+                    fontSize: "0.9rem",
+                    color: colors.error,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: spacing.sm,
+                    justifyContent: "center",
+                  }}
+                >
+                  <AlertCircle size={16} />
+                  {tasksErrorMessage}
+                </motion.div>
+              )}
+
+              {/* Loading indicator for tasks data */}
+              {tasksLoading && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  style={{
+                    marginTop: spacing.lg,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: spacing.sm,
+                    justifyContent: "center",
+                    color: colors.textSecondary,
+                  }}
+                >
+                  <motion.div
+                    style={{
+                      width: "16px",
+                      height: "16px",
+                      border: `2px solid ${colors.surfaceLight}`,
+                      borderTop: `2px solid ${colors.primary}`,
+                      borderRadius: "50%",
+                    }}
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                  />
+                  Loading progress data...
+                </motion.div>
+              )}
+            </motion.div>
+
+            {/* Progress Grid - Responsive and Centered */}
             <div
               style={{
-                display: "grid",
-                gridTemplateColumns:
-                  window.innerWidth >= 1024
-                    ? "repeat(2, minmax(300px, 400px))"
-                    : window.innerWidth >= 640
-                    ? "repeat(2, 1fr)"
-                    : "1fr",
-                gap: window.innerWidth >= 768 ? spacing.xl : spacing.lg,
-                marginBottom: spacing["3xl"],
+                display: "flex",
                 justifyContent: "center",
                 width: "100%",
-                maxWidth: "900px",
               }}
             >
-              {progressData.map((item, index) => (
-                <ProgressCard
-                  key={item.title}
-                  icon={item.icon}
-                  title={item.title}
-                  value={item.value}
-                  subtitle={item.subtitle}
-                  color={item.color}
-                  delay={index * 0.1}
-                />
-              ))}
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns:
+                    window.innerWidth >= 1024
+                      ? "repeat(2, minmax(300px, 400px))"
+                      : window.innerWidth >= 640
+                      ? "repeat(2, 1fr)"
+                      : "1fr",
+                  gap: window.innerWidth >= 768 ? spacing.xl : spacing.lg,
+                  marginBottom: spacing["3xl"],
+                  justifyContent: "center",
+                  width: "100%",
+                  maxWidth: "900px",
+                }}
+              >
+                {progressData.map((item, index) => (
+                  <ProgressCard
+                    key={item.title}
+                    icon={item.icon}
+                    title={item.title}
+                    value={item.value}
+                    subtitle={item.subtitle}
+                    color={item.color}
+                    delay={index * 0.1}
+                  />
+                ))}
+              </div>
             </div>
-          </div>
-        </motion.div>
+          </motion.div>
+        ) : (
+          /* Alternative section for non-career associates */
+          <motion.div
+            style={{
+              y: progressY,
+              opacity: progressOpacity,
+              padding: window.innerWidth >= 768 ? spacing["2xl"] : spacing.lg,
+              backgroundColor: colors.background,
+              position: "relative",
+              zIndex: 10,
+              minHeight: "100vh",
+              borderTop: `1px solid ${colors.surfaceLight}20`,
+              background: `linear-gradient(135deg, ${colors.background} 0%, ${colors.surface}20 50%, ${colors.background} 100%)`,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <motion.div
+              style={{
+                textAlign: "center",
+                maxWidth: "600px",
+              }}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              viewport={{ once: true }}
+            >
+              <h2
+                style={{
+                  fontSize: window.innerWidth >= 768 ? "2rem" : "1.5rem",
+                  fontWeight: "700",
+                  color: colors.textPrimary,
+                  margin: 0,
+                  marginBottom: spacing.lg,
+                  fontFamily: fonts.logo,
+                }}
+              >
+                Welcome to ApplyWizz
+              </h2>
+              <p
+                style={{
+                  fontSize: "1.1rem",
+                  color: colors.textSecondary,
+                  margin: 0,
+                  lineHeight: 1.6,
+                  marginBottom: spacing.lg,
+                }}
+              >
+                Your journey to productivity perfection starts here. Check out the leaderboard to see how you stack up against other heroes!
+              </p>
+              <motion.div
+                style={{
+                  padding: spacing.xl,
+                  backgroundColor: `${colors.primary}10`,
+                  borderRadius: "12px",
+                  border: `1px solid ${colors.primary}20`,
+                }}
+                whileHover={{ backgroundColor: `${colors.primary}15` }}
+              >
+                <Trophy size={48} style={{ color: colors.primary, margin: "0 auto", marginBottom: spacing.md }} />
+                <p style={{ color: colors.textSecondary, fontSize: "0.9rem", margin: 0 }}>
+                  Detailed progress tracking is available for Career Associates. Upgrade your role in Settings to unlock advanced analytics!
+                </p>
+              </motion.div>
+            </motion.div>
+          </motion.div>
+        )}
       </main>
     </div>
   );

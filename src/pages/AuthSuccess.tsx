@@ -11,11 +11,13 @@ import {
   Briefcase,
   Headphones,
   ChevronDown,
+  AlertCircle,
 } from "lucide-react";
 import { fonts } from "./../utils/theme.ts";
 import AnimatedBackground from "./../components/ui/AnimatedBackground.tsx";
 import Logo from "../components/Logo.tsx";
 import { useAuthContext } from "../hooks/hooks.tsx";
+import { useSetRole } from "../hooks/useApi.ts";
 
 interface RoleOption {
   value: string;
@@ -41,6 +43,8 @@ const AuthSuccess: React.FC = () => {
   const [searchParams] = useSearchParams();
   const id_token = searchParams.get("id_token");
   const exists = searchParams.get("exists");
+
+  const setRoleMutation = useSetRole();
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -101,16 +105,29 @@ const AuthSuccess: React.FC = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  const handleRoleSubmit = () => {
+  const handleRoleSubmit = async () => {
     if (selectedRole) {
-      // Note: localStorage is not available in Claude artifacts
-      localStorage.setItem("userRole", selectedRole);
-      login(id_token as string);
-      navigate("/dashboard");
+      try {
+        // Set role in localStorage as fallback
+        localStorage.setItem("userRole", selectedRole);
+        
+        // Login first to get the token
+        login(id_token as string);
+        
+        // Send role to backend
+        await setRoleMutation.mutateAsync(selectedRole);
+        
+        navigate("/dashboard");
+      } catch (error) {
+        console.error("Failed to set role:", error);
+        // Still navigate to dashboard even if role setting fails
+        navigate("/dashboard");
+      }
     }
   };
 
   const handleSkip = () => {
+    login(id_token as string);
     navigate("/dashboard");
   };
 
@@ -496,26 +513,26 @@ const AuthSuccess: React.FC = () => {
                   >
                     <button
                       onClick={handleRoleSubmit}
-                      disabled={!selectedRole}
+                      disabled={!selectedRole || setRoleMutation.isPending}
                       style={{
                         padding: "1rem 1.5rem",
-                        backgroundColor: selectedRole ? "#3b82f6" : "#4b5563",
+                        backgroundColor: selectedRole && !setRoleMutation.isPending ? "#3b82f6" : "#4b5563",
                         color: "white",
                         border: "none",
                         borderRadius: "0.75rem",
                         fontWeight: "600",
                         fontSize: "1rem",
-                        cursor: selectedRole ? "pointer" : "not-allowed",
+                        cursor: selectedRole && !setRoleMutation.isPending ? "pointer" : "not-allowed",
                         transition: "all 0.3s ease",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
                         gap: "0.75rem",
-                        opacity: selectedRole ? 1 : 0.6,
+                        opacity: selectedRole && !setRoleMutation.isPending ? 1 : 0.6,
                         outline: "none",
                       }}
                       onMouseEnter={(e) => {
-                        if (selectedRole) {
+                        if (selectedRole && !setRoleMutation.isPending) {
                           e.currentTarget.style.backgroundColor = "#2563eb";
                           e.currentTarget.style.transform = "translateY(-2px)";
                           e.currentTarget.style.boxShadow =
@@ -523,18 +540,59 @@ const AuthSuccess: React.FC = () => {
                         }
                       }}
                       onMouseLeave={(e) => {
-                        if (selectedRole) {
+                        if (selectedRole && !setRoleMutation.isPending) {
                           e.currentTarget.style.backgroundColor = "#3b82f6";
                           e.currentTarget.style.transform = "translateY(0)";
                           e.currentTarget.style.boxShadow = "none";
                         }
                       }}
                     >
-                      Continue to Dashboard
-                      <ArrowRight
-                        style={{ height: "1.25rem", width: "1.25rem" }}
-                      />
+                      {setRoleMutation.isPending ? (
+                        <>
+                          <motion.div
+                            style={{
+                              width: "1.25rem",
+                              height: "1.25rem",
+                              border: "2px solid transparent",
+                              borderTop: "2px solid white",
+                              borderRadius: "50%",
+                            }}
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                          />
+                          Setting Role...
+                        </>
+                      ) : (
+                        <>
+                          Continue to Dashboard
+                          <ArrowRight
+                            style={{ height: "1.25rem", width: "1.25rem" }}
+                          />
+                        </>
+                      )}
                     </button>
+
+                    {/* Error display */}
+                    {setRoleMutation.error && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        style={{
+                          padding: "1rem",
+                          backgroundColor: "rgba(239, 68, 68, 0.1)",
+                          border: "1px solid rgba(239, 68, 68, 0.3)",
+                          borderRadius: "0.75rem",
+                          color: "#f87171",
+                          fontSize: "0.9rem",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "0.5rem",
+                        }}
+                      >
+                        <AlertCircle size={16} />
+                        Failed to set role. You can update it later in Settings.
+                      </motion.div>
+                    )}
 
                     <button
                       onClick={handleSkip}
