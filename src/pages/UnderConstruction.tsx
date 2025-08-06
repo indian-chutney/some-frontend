@@ -13,7 +13,8 @@ import {
 import Sidebar from "../components/Sidebar";
 import { Card } from "../components/ui/card";
 import { colors, fonts, spacing } from "../utils/theme";
-import { useBackendQuery } from "../hooks/hooks";
+import { useAuthContext, useBackendQuery } from "../hooks/hooks";
+import { decodeJwt } from "jose";
 
 interface UnderConstructionProps {
   title: string;
@@ -155,6 +156,11 @@ const UnderConstruction: React.FC<UnderConstructionProps> = ({
 export const Settings: React.FC = () => {
   const [selectedTimeRange, setSelectedTimeRange] = useState<string>("30days");
   const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  const { token } = useAuthContext();
+  const role = localStorage.getItem("role");
+
+  const user = decodeJwt(token as string);
 
   // Enhanced mock data for historical progress
   const generateHistoricalData = (range: string) => {
@@ -332,7 +338,7 @@ export const Settings: React.FC = () => {
                   boxShadow: `0 8px 32px ${colors.primary}40`,
                 }}
               >
-                JD
+                MZ
                 {/* Status indicator */}
                 <div
                   style={{
@@ -364,7 +370,7 @@ export const Settings: React.FC = () => {
                   marginBottom: spacing.xs,
                 }}
               >
-                John Doe
+                {user.name as string}
               </h2>
               <p
                 style={{
@@ -374,7 +380,7 @@ export const Settings: React.FC = () => {
                   marginBottom: spacing["2xl"],
                 }}
               >
-                john.doe@applywizz.com
+                {user.preferred_username as string}
               </p>
             </motion.div>
           </Card>
@@ -790,6 +796,13 @@ type individualEntry = {
   user_score: string;
 };
 
+type PersonalProgress = {
+  rank: string;
+  name: string;
+  score: string;
+  totalParticipants: string;
+};
+
 type teamEntry = {
   team_name: string;
   team_score: string;
@@ -807,21 +820,33 @@ export const Leaderboard: React.FC = () => {
     ["leaderboard", activeTab, period],
     endpoint
   );
+  console.log(data);
 
   const leaderboardData =
     (activeTab === "team"
-      ? (data as { teams: LeaderboardEntry[] })?.teams
-      : (data as { individuals: LeaderboardEntry[] })?.individuals) || [];
+      ? (
+          data as {
+            teams: LeaderboardEntry[];
+            personal_progress: PersonalProgress;
+          }
+        )?.teams
+      : (
+          data as {
+            individuals: LeaderboardEntry[];
+            personal_progress: PersonalProgress;
+          }
+        )?.individuals) || [];
 
-  console.log(leaderboardData);
   const personalProgress = {
-    rank: activeTab === "team" ? 3 : 24,
-    totalParticipants: leaderboardData.length,
-    name: "John Doe",
-    score: 23,
-    completedTasks: 23,
+    rank: (data as any)?.personal_progress?.rank,
+    totalParticipants: (data as any)?.personal_progress?.totalParticipants,
+    name: (data as any)?.personal_progress?.name,
+    score: (data as any)?.personal_progress?.score,
+    completedTasks: (data as any)?.personal_progress?.score,
     totalTasks: 100,
   };
+
+  console.log(personalProgress);
 
   return (
     <div
@@ -920,22 +945,6 @@ export const Leaderboard: React.FC = () => {
                     of {personalProgress.totalParticipants}{" "}
                     {activeTab === "team" ? "teams" : "players"}
                   </div>
-                </div>
-              </Card>
-
-              {/* Score Card */}
-              <Card>
-                <div style={{ textAlign: "center" }}>
-                  <div
-                    style={{
-                      fontSize: "2rem",
-                      color: colors.secondary,
-                      fontWeight: "700",
-                    }}
-                  >
-                    {personalProgress.score}
-                  </div>
-                  <div>Total Score</div>
                 </div>
               </Card>
 
