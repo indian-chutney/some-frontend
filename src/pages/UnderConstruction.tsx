@@ -154,7 +154,7 @@ const UnderConstruction: React.FC<UnderConstructionProps> = ({
 
 // Settings Component
 export const Settings: React.FC = () => {
-  const [selectedTimeRange, setSelectedTimeRange] = useState<string>("30days");
+  const [selectedTimeRange, setSelectedTimeRange] = useState<string>("week");
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const { token } = useAuthContext();
@@ -162,103 +162,20 @@ export const Settings: React.FC = () => {
 
   const user = decodeJwt(token as string);
 
-  // Enhanced mock data for historical progress
-  const generateHistoricalData = (range: string) => {
-    const now = new Date();
-    let data = [];
-
-    switch (range) {
-      case "30days":
-        for (let i = 29; i >= 0; i--) {
-          const date = new Date(now);
-          date.setDate(date.getDate() - i);
-          data.push({
-            date: date.toLocaleDateString("en-US", {
-              month: "short",
-              day: "numeric",
-            }),
-            fullDate: date.toISOString().split("T")[0],
-            tasks: Math.floor(Math.random() * 15) + 5,
-            productivity: Math.floor(Math.random() * 40) + 60,
-            focus: Math.floor(Math.random() * 8) + 4,
-          });
-        }
-        break;
-      case "3months":
-        for (let i = 11; i >= 0; i--) {
-          const date = new Date(now);
-          date.setMonth(date.getMonth() - i);
-          data.push({
-            date: date.toLocaleDateString("en-US", {
-              month: "short",
-              year: "2-digit",
-            }),
-            fullDate: date.toISOString().split("T")[0],
-            tasks: Math.floor(Math.random() * 300) + 200,
-            productivity: Math.floor(Math.random() * 40) + 60,
-            focus: Math.floor(Math.random() * 200) + 120,
-          });
-        }
-        break;
-      case "6months":
-        for (let i = 5; i >= 0; i--) {
-          const date = new Date(now);
-          date.setMonth(date.getMonth() - i);
-          data.push({
-            date: date.toLocaleDateString("en-US", {
-              month: "short",
-              year: "2-digit",
-            }),
-            fullDate: date.toISOString().split("T")[0],
-            tasks: Math.floor(Math.random() * 600) + 400,
-            productivity: Math.floor(Math.random() * 40) + 60,
-            focus: Math.floor(Math.random() * 400) + 250,
-          });
-        }
-        break;
-      case "1year":
-        for (let i = 11; i >= 0; i--) {
-          const date = new Date(now);
-          date.setMonth(date.getMonth() - i);
-          data.push({
-            date: date.toLocaleDateString("en-US", {
-              month: "short",
-              year: "2-digit",
-            }),
-            fullDate: date.toISOString().split("T")[0],
-            tasks: Math.floor(Math.random() * 1200) + 800,
-            productivity: Math.floor(Math.random() * 40) + 60,
-            focus: Math.floor(Math.random() * 800) + 500,
-          });
-        }
-        break;
-      default:
-        data = [];
-    }
-
-    return data;
-  };
-
-  const [chartData, setChartData] = useState(
-    generateHistoricalData(selectedTimeRange)
+  // Fetch user graph data from API
+  const { data: chartData, isLoading: chartLoading } = useBackendQuery(
+    ["user-graph", selectedTimeRange],
+    `/user-graph?data=${selectedTimeRange}`
   );
 
   const handleTimeRangeChange = (range: string) => {
-    setIsLoading(true);
     setSelectedTimeRange(range);
-
-    // Simulate API call delay
-    setTimeout(() => {
-      setChartData(generateHistoricalData(range));
-      setIsLoading(false);
-    }, 500);
   };
 
   const timeRangeOptions = [
+    { value: "week", label: "Last Week" },
     { value: "30days", label: "Last 30 Days" },
-    { value: "3months", label: "Last 3 Months" },
-    { value: "6months", label: "Last 6 Months" },
-    { value: "1year", label: "Last Year" },
+    { value: "all_time", label: "All Time" },
   ];
 
   return (
@@ -398,7 +315,7 @@ export const Settings: React.FC = () => {
               style={{
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "space-between",
+                justifyContent: "flex-start",
                 marginBottom: spacing.lg,
               }}
             >
@@ -429,27 +346,6 @@ export const Settings: React.FC = () => {
                 </motion.div>
                 Your Selected Role
               </h3>
-
-              <motion.button
-                style={{
-                  padding: `${spacing.sm} ${spacing.md}`,
-                  backgroundColor: "transparent",
-                  border: `1px solid ${colors.primary}`,
-                  borderRadius: "6px",
-                  color: colors.primary,
-                  fontSize: "0.85rem",
-                  fontWeight: "600",
-                  cursor: "pointer",
-                  fontFamily: fonts.body,
-                }}
-                whileHover={{
-                  backgroundColor: colors.primary,
-                  color: colors.textPrimary,
-                }}
-                whileTap={{ scale: 0.95 }}
-              >
-                Change Role
-              </motion.button>
             </div>
 
             <motion.div
@@ -492,7 +388,7 @@ export const Settings: React.FC = () => {
                     marginBottom: spacing.xs,
                   }}
                 >
-                  Productivity Specialist
+                  {role || "No role selected"}
                 </h4>
                 <p
                   style={{
@@ -502,8 +398,7 @@ export const Settings: React.FC = () => {
                     marginBottom: spacing.xs,
                   }}
                 >
-                  Focused on optimizing workflows and achieving goals
-                  efficiently
+                  Your selected role for personalized experience
                 </p>
                 <div
                   style={{
@@ -572,7 +467,7 @@ export const Settings: React.FC = () => {
                   <motion.button
                     key={option.value}
                     onClick={() => handleTimeRangeChange(option.value)}
-                    disabled={isLoading}
+                    disabled={chartLoading}
                     style={{
                       padding: `${spacing.sm} ${spacing.md}`,
                       borderRadius: "8px",
@@ -587,12 +482,12 @@ export const Settings: React.FC = () => {
                           : colors.textSecondary,
                       fontSize: "0.85rem",
                       fontWeight: "600",
-                      cursor: isLoading ? "not-allowed" : "pointer",
-                      opacity: isLoading ? 0.6 : 1,
+                      cursor: chartLoading ? "not-allowed" : "pointer",
+                      opacity: chartLoading ? 0.6 : 1,
                       transition: "all 0.2s ease",
                     }}
                     whileHover={
-                      !isLoading
+                      !chartLoading
                         ? {
                             backgroundColor:
                               selectedTimeRange === option.value
@@ -601,7 +496,7 @@ export const Settings: React.FC = () => {
                           }
                         : {}
                     }
-                    whileTap={!isLoading ? { scale: 0.95 } : {}}
+                    whileTap={!chartLoading ? { scale: 0.95 } : {}}
                   >
                     {option.label}
                   </motion.button>
@@ -615,14 +510,14 @@ export const Settings: React.FC = () => {
                 height: "400px",
                 width: "100%",
                 position: "relative",
-                opacity: isLoading ? 0.5 : 1,
+                opacity: chartLoading ? 0.5 : 1,
                 transition: "opacity 0.3s ease",
               }}
               initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: isLoading ? 0.5 : 1, y: 0 }}
+              animate={{ opacity: chartLoading ? 0.5 : 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.4 }}
             >
-              {isLoading && (
+              {chartLoading && (
                 <div
                   style={{
                     position: "absolute",
@@ -650,65 +545,49 @@ export const Settings: React.FC = () => {
                 </div>
               )}
 
-              <LineChart
-                width={window.innerWidth >= 768 ? 800 : 300}
-                height={400}
-                data={chartData}
-                margin={{
-                  top: 20,
-                  right: 30,
-                  left: 20,
-                  bottom: 20,
-                }}
-              >
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke={colors.surfaceLight}
-                />
-                <XAxis
-                  dataKey="date"
-                  stroke={colors.textSecondary}
-                  fontSize={12}
-                />
-                <YAxis stroke={colors.textSecondary} fontSize={12} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: colors.surface,
-                    border: `1px solid ${colors.surfaceLight}`,
-                    borderRadius: "8px",
-                    color: colors.textPrimary,
-                    fontSize: "0.875rem",
-                  }}
-                  labelStyle={{ color: colors.textSecondary }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="tasks"
-                  stroke={colors.primary}
-                  strokeWidth={3}
-                  dot={{ fill: colors.primary, strokeWidth: 2, r: 4 }}
-                  activeDot={{ r: 6, fill: colors.primaryLight }}
-                  name="Tasks Completed"
-                />
-                <Line
-                  type="monotone"
-                  dataKey="productivity"
-                  stroke={colors.secondary}
-                  strokeWidth={2}
-                  dot={{ fill: colors.secondary, strokeWidth: 2, r: 3 }}
-                  activeDot={{ r: 5, fill: colors.secondaryLight }}
-                  name="Productivity %"
-                />
-                <Line
-                  type="monotone"
-                  dataKey="focus"
-                  stroke={colors.success}
-                  strokeWidth={2}
-                  dot={{ fill: colors.success, strokeWidth: 2, r: 3 }}
-                  activeDot={{ r: 5, fill: "#34d399" }}
-                  name="Focus Hours"
-                />
-              </LineChart>
+              {chartData && (
+                <ResponsiveContainer width="100%" height={400}>
+                  <LineChart
+                    data={chartData}
+                    margin={{
+                      top: 20,
+                      right: 30,
+                      left: 20,
+                      bottom: 20,
+                    }}
+                  >
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke={colors.surfaceLight}
+                    />
+                    <XAxis
+                      dataKey="date"
+                      stroke={colors.textSecondary}
+                      fontSize={12}
+                    />
+                    <YAxis stroke={colors.textSecondary} fontSize={12} />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: colors.surface,
+                        border: `1px solid ${colors.surfaceLight}`,
+                        borderRadius: "8px",
+                        color: colors.textPrimary,
+                        fontSize: "0.875rem",
+                      }}
+                      labelStyle={{ color: colors.textSecondary }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="tasks"
+                      stroke={colors.primary}
+                      strokeWidth={3}
+                      dot={{ fill: colors.primary, strokeWidth: 2, r: 4 }}
+                      activeDot={{ r: 6, fill: colors.primaryLight }}
+                      name="Tasks Completed"
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              )}
             </motion.div>
 
             {/* Chart Legend */}
@@ -721,37 +600,30 @@ export const Settings: React.FC = () => {
                 flexWrap: "wrap",
               }}
             >
-              {[
-                { color: colors.primary, label: "Tasks Completed" },
-                { color: colors.secondary, label: "Productivity %" },
-                { color: colors.success, label: "Focus Hours" },
-              ].map((item) => (
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: spacing.sm,
+                }}
+              >
                 <div
-                  key={item.label}
                   style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: spacing.sm,
+                    width: "12px",
+                    height: "12px",
+                    backgroundColor: colors.primary,
+                    borderRadius: "50%",
+                  }}
+                />
+                <span
+                  style={{
+                    fontSize: "0.875rem",
+                    color: colors.textSecondary,
                   }}
                 >
-                  <div
-                    style={{
-                      width: "12px",
-                      height: "12px",
-                      backgroundColor: item.color,
-                      borderRadius: "50%",
-                    }}
-                  />
-                  <span
-                    style={{
-                      fontSize: "0.875rem",
-                      color: colors.textSecondary,
-                    }}
-                  >
-                    {item.label}
-                  </span>
-                </div>
-              ))}
+                  Tasks Completed
+                </span>
+              </div>
             </div>
           </Card>
 
