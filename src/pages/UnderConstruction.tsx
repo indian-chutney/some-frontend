@@ -168,6 +168,10 @@ export const Settings: React.FC = () => {
     `/user-graph?data=${selectedTimeRange}`
   );
 
+  const chartExists = Array.isArray((chartData as any)?.user_data);
+
+  console.log(chartData);
+
   const handleTimeRangeChange = (range: string) => {
     setSelectedTimeRange(range);
   };
@@ -545,10 +549,10 @@ export const Settings: React.FC = () => {
                 </div>
               )}
 
-              {chartData && (
+              {chartExists && (
                 <ResponsiveContainer width="100%" height={400}>
                   <LineChart
-                    data={chartData}
+                    data={(chartData as any)?.user_data || []}
                     margin={{
                       top: 20,
                       right: 30,
@@ -1207,4 +1211,3 @@ export const Spaces: React.FC = () => {
     </div>
   );
 };
-

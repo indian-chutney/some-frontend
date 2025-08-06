@@ -93,10 +93,12 @@ const AuthSuccess: React.FC = () => {
     if (selectedRole) {
       // Save role to localStorage
       localStorage.setItem("role", selectedRole);
-      
+
       // Send POST request to save role
       try {
-        await backendPostRequest("/role", id_token as string, { role: selectedRole });
+        await backendPostRequest("/role", id_token as string, {
+          role: selectedRole,
+        });
         login(id_token as string);
         navigate("/dashboard");
       } catch (error) {
