@@ -11,7 +11,7 @@ export const useAuthContext = () => {
   return auth;
 };
 
-export const useBackendQuery = (key: string, endpoint: string) => {
+export const useBackendQuery = (key: any, endpoint: string) => {
   const { token } = useAuthContext();
   return useQuery({
     queryKey: [key],
