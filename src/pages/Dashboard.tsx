@@ -11,6 +11,7 @@ import {
 import Sidebar from "../components/Sidebar";
 import { Card, CardContent } from "../components/ui/card";
 import { colors, fonts, spacing } from "../utils/theme";
+import { useBackendQuery } from "../hooks/hooks";
 
 interface ThanosCharacterProps {
   scrollY: MotionValue<number>;
@@ -29,7 +30,7 @@ interface ProgressDataItem {
   icon: LucideIcon;
   title: string;
   value: string;
-  subtitle: string;
+  subtitle?: string;
   color: string;
 }
 
@@ -188,8 +189,22 @@ const ThanosCharacter: React.FC<ThanosCharacterProps> = ({ scrollY }) => {
   );
 };
 
+const BAR_WIDTH = 600; // Wider visual bar for clarity
+
 const HPBar: React.FC = () => {
-  const hp = 85;
+  const {
+    data: thanos,
+    isLoading,
+    error,
+  } = useBackendQuery("thanos-hp", "/thanos-hp");
+
+  if (isLoading) return <div>Loading...</div>;
+  if (error || !thanos) return <div>Error loading HP</div>;
+
+  const { hp, total_hp } = thanos as any;
+
+  const clampedHP = Math.max(0, Math.min(hp, total_hp));
+  const fillWidth = (clampedHP / total_hp) * BAR_WIDTH;
 
   return (
     <motion.div
@@ -207,13 +222,15 @@ const HPBar: React.FC = () => {
           justifyContent: "space-between",
           alignItems: "center",
           marginBottom: spacing.sm,
+          width: BAR_WIDTH,
+          margin: "0 auto",
         }}
       >
         <span
           style={{
             color: colors.textSecondary,
             fontSize: "0.9rem",
-            fontWeight: "600",
+            fontWeight: 600,
           }}
         >
           Power Level
@@ -222,49 +239,47 @@ const HPBar: React.FC = () => {
           style={{
             color: colors.textPrimary,
             fontSize: "1rem",
-            fontWeight: "700",
+            fontWeight: 700,
           }}
         >
-          {hp}/100
+          {hp}/{total_hp}
         </span>
       </div>
 
       <div
         style={{
-          width: "100%",
-          height: "12px",
+          width: BAR_WIDTH,
+          height: "16px",
           backgroundColor: colors.hpBackground,
-          borderRadius: "6px",
+          borderRadius: "8px",
           position: "relative",
           overflow: "hidden",
+          margin: "0 auto",
         }}
       >
         <motion.div
           style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
             height: "100%",
             backgroundColor:
-              hp > 70
+              clampedHP > total_hp * 0.7
                 ? colors.hpFull
-                : hp > 30
+                : clampedHP > total_hp * 0.3
                 ? colors.hpMedium
                 : colors.hpLow,
-            borderRadius: "6px",
+            borderRadius: "8px",
             boxShadow:
-              hp > 70
+              clampedHP > total_hp * 0.7
                 ? `0 0 10px ${colors.hpFull}40`
-                : hp > 30
+                : clampedHP > total_hp * 0.3
                 ? `0 0 10px ${colors.hpMedium}40`
                 : `0 0 10px ${colors.hpLow}40`,
           }}
           initial={{ width: 0 }}
-          animate={{ width: `${hp}%` }}
+          animate={{ width: fillWidth }}
           transition={{ duration: 1.5, ease: "easeOut" }}
         />
 
-        {/* Shimmer effect */}
+        {/* Shimmer */}
         <motion.div
           style={{
             position: "absolute",
@@ -275,7 +290,7 @@ const HPBar: React.FC = () => {
             background:
               "linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)",
           }}
-          animate={{ left: ["−100%", "100%"] }}
+          animate={{ left: ["-100%", "100%"] }}
           transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
         />
       </div>
@@ -439,33 +454,52 @@ const Dashboard: React.FC = () => {
   const progressY = useTransform(scrollY, [200, 500], [100, 0]);
   const progressOpacity = useTransform(scrollY, [150, 300], [0, 1]);
 
+  const {
+    data: progress_data,
+    isLoading,
+    error,
+  } = useBackendQuery("progress", "/tasks-info");
+
+  if (isLoading) return <div>Loading...</div>;
+  if (error || !progress_data) return <div>Error loading HP</div>;
+
+  const {
+    todays_tasks,
+    progress,
+    weeks_tasks,
+    weeks_progress,
+    months_tasks,
+    months_progress,
+    all_time_tasks,
+  } = progress_data as any;
+
   const progressData: ProgressDataItem[] = [
     {
       icon: Target,
       title: "Today's Tasks",
-      value: "12",
-      subtitle: "+12% from yesterday",
+      value: todays_tasks,
+      ...(progress > 0 ? { subtitle: progress } : {}),
       color: colors.success,
     },
     {
       icon: TrendingUp,
       title: "This Week",
-      value: "58",
-      subtitle: "+2% from last week",
+      value: weeks_tasks,
+      ...(progress > 0 ? { subtitle: weeks_progress } : {}),
       color: colors.primary,
     },
     {
       icon: Calendar,
       title: "This Month",
-      value: "98",
-      subtitle: "+5% from last month",
+      value: months_tasks,
+      ...(progress > 0 ? { subtitle: months_progress } : {}),
       color: colors.secondary,
     },
     {
       icon: Trophy,
       title: "All Time",
-      value: "389",
-      subtitle: "Better than 45% (above average)",
+      value: all_time_tasks,
+      subtitle: "Keep Working Hard",
       color: colors.primary,
     },
   ];
@@ -615,7 +649,8 @@ const Dashboard: React.FC = () => {
               transition={{ duration: 0.8, delay: 0.3 }}
               viewport={{ once: true }}
             >
-              Ready to balance productivity and achieve perfectly balanced goals?
+              Ready to balance productivity and achieve perfectly balanced
+              goals?
             </motion.p>
             <h2
               style={{
@@ -671,7 +706,7 @@ const Dashboard: React.FC = () => {
                   icon={item.icon}
                   title={item.title}
                   value={item.value}
-                  subtitle={item.subtitle}
+                  subtitle={item.subtitle as string}
                   color={item.color}
                   delay={index * 0.1}
                 />
@@ -685,4 +720,3 @@ const Dashboard: React.FC = () => {
 };
 
 export default Dashboard;
-
