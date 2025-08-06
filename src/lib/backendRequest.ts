@@ -14,3 +14,18 @@ export async function backendRequest(endpoint: string, token: string) {
     throw error;
   }
 }
+
+export async function backendPostRequest(endpoint: string, token: string, data: any) {
+  try {
+    const res = await axios.post(`${backend_url}${endpoint}`, data, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+    return res.data;
+  } catch (error: any) {
+    console.error("POST request failed:", error?.response?.data || error.message);
+    throw error;
+  }
+}

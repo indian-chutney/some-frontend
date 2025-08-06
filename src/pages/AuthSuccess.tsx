@@ -16,6 +16,7 @@ import { fonts } from "./../utils/theme.ts";
 import AnimatedBackground from "./../components/ui/AnimatedBackground.tsx";
 import Logo from "../components/Logo.tsx";
 import { useAuthContext } from "../hooks/hooks.tsx";
+import { backendPostRequest } from "../lib/backendRequest.ts";
 
 interface RoleOption {
   value: string;
@@ -88,12 +89,22 @@ const AuthSuccess: React.FC = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  const handleRoleSubmit = () => {
+  const handleRoleSubmit = async () => {
     if (selectedRole) {
-      // Note: localStorage is not available in Claude artifacts
-      // localStorage.setItem("userRole", selectedRole);
-      login(id_token as string);
-      navigate("/dashboard");
+      // Save role to localStorage
+      localStorage.setItem("role", selectedRole);
+      
+      // Send POST request to save role
+      try {
+        await backendPostRequest("/role", id_token as string, { role: selectedRole });
+        login(id_token as string);
+        navigate("/dashboard");
+      } catch (error) {
+        console.error("Error saving role:", error);
+        // Still proceed to dashboard even if backend fails
+        login(id_token as string);
+        navigate("/dashboard");
+      }
     }
   };
 
