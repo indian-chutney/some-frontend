@@ -13,6 +13,8 @@ import PhaserThanosGame from "../components/PhaserThanosGame";
 import { Card, CardContent } from "../components/ui/card";
 import { colors, fonts, spacing } from "../utils/theme";
 import { useBackendQuery } from "../hooks/hooks";
+import { isCareerAssociate, getCurrentRole } from "../utils/roleUtils";
+import { RoleFallbackUI, ErrorUI, LoadingUI, NoDataUI } from "../components/FallbackComponents";
 
 interface ProgressCardProps {
   icon: LucideIcon;
@@ -319,9 +321,6 @@ const Dashboard: React.FC = () => {
 
   const data = error || !progress_data ? fallbackProgressData : progress_data;
 
-  // Only show loading if we're actually loading and don't have an error yet
-  if (isLoading && !error) return <div>Loading...</div>;
-
   const {
     todays_tasks,
     progress,
@@ -549,34 +548,68 @@ const Dashboard: React.FC = () => {
               width: "100%",
             }}
           >
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns:
-                  window.innerWidth >= 1024
-                    ? "repeat(2, minmax(300px, 400px))"
-                    : window.innerWidth >= 640
-                    ? "repeat(2, 1fr)"
-                    : "1fr",
-                gap: window.innerWidth >= 768 ? spacing.xl : spacing.lg,
-                marginBottom: spacing["3xl"],
-                justifyContent: "center",
-                width: "100%",
-                maxWidth: "900px",
-              }}
-            >
-              {progressData.map((item, index) => (
-                <ProgressCard
-                  key={item.title}
-                  icon={item.icon}
-                  title={item.title}
-                  value={item.value}
-                  subtitle={item.subtitle as string}
-                  color={item.color}
-                  delay={index * 0.1}
+            {/* Role-based conditional rendering for progress cards */}
+            {isCareerAssociate() ? (
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns:
+                    window.innerWidth >= 1024
+                      ? "repeat(2, minmax(300px, 400px))"
+                      : window.innerWidth >= 640
+                      ? "repeat(2, 1fr)"
+                      : "1fr",
+                  gap: window.innerWidth >= 768 ? spacing.xl : spacing.lg,
+                  marginBottom: spacing["3xl"],
+                  justifyContent: "center",
+                  width: "100%",
+                  maxWidth: "900px",
+                }}
+              >
+                {/* Show progress cards based on data availability */}
+                {error ? (
+                  <div style={{ gridColumn: "1 / -1" }}>
+                    <ErrorUI 
+                      error={error.message || "Failed to load progress data"}
+                      onRetry={() => window.location.reload()}
+                    />
+                  </div>
+                ) : isLoading ? (
+                  <div style={{ gridColumn: "1 / -1" }}>
+                    <LoadingUI 
+                      type="skeleton" 
+                      message="Loading your progress data..."
+                    />
+                  </div>
+                ) : !progress_data ? (
+                  <div style={{ gridColumn: "1 / -1" }}>
+                    <NoDataUI 
+                      title="No Progress Data"
+                      message="We couldn't find any progress data. Start completing tasks to see your progress here!"
+                    />
+                  </div>
+                ) : (
+                  progressData.map((item, index) => (
+                    <ProgressCard
+                      key={item.title}
+                      icon={item.icon}
+                      title={item.title}
+                      value={item.value}
+                      subtitle={item.subtitle as string}
+                      color={item.color}
+                      delay={index * 0.1}
+                    />
+                  ))
+                )}
+              </div>
+            ) : (
+              <div style={{ width: "100%", maxWidth: "900px" }}>
+                <RoleFallbackUI
+                  title="Progress Dashboard"
+                  message={`Hi there! This detailed progress tracking is available for career associates. Your current role is "${getCurrentRole() || 'not set'}". Contact your admin to update your access level.`}
                 />
-              ))}
-            </div>
+              </div>
+            )}
           </div>
         </motion.div>
       </main>
