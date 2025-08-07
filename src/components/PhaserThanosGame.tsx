@@ -52,18 +52,14 @@ class ArenaScene extends Phaser.Scene {
   }
 
   preload(): void {
-    // Use existing thanos asset or fallback
     this.load.image("thanos", "/assets/thanos.png");
 
-    // Create simple colored rectangles as placeholders for sprites
-    // In a real implementation, these would be actual spritesheets
-
     this.load.spritesheet("orc_attack", "/assets/Orc-Attack01.png", {
-      frameWidth: 88,
+      frameWidth: 100,
       frameHeight: 100,
     });
     this.load.spritesheet("soldier_attack", "/assets/Soldier-Attack01.png", {
-      frameWidth: 88,
+      frameWidth: 100,
       frameHeight: 100,
     });
   }
@@ -71,19 +67,11 @@ class ArenaScene extends Phaser.Scene {
   create(): void {
     const centerX = this.cameras.main.width / 2;
 
+    this.createAnimations();
+
     this.thanos = this.add
       .image(centerX, CONFIG.thanos.yPosition, "thanos")
       .setScale(CONFIG.thanos.scale);
-
-    this.anims.create({
-      key: "orc_attack_anim",
-      frames: this.anims.generateFrameNumbers("orc_attack", {
-        start: 0,
-        end: 6,
-      }),
-      frameRate: 10,
-      repeat: -1,
-    });
 
     this.time.addEvent({
       delay: 2000,
@@ -94,29 +82,41 @@ class ArenaScene extends Phaser.Scene {
     this.scale.on("resize", this.resize, this);
   }
 
+  createAnimations(): void {
+    this.anims.create({
+      key: "orc_attack_anim",
+      frames: this.anims.generateFrameNumbers("orc_attack", {
+        start: 0,
+        end: 5,
+      }),
+      frameRate: 10,
+      repeat: -1,
+    });
+    this.anims.create({
+      key: "soldier_attack_anim",
+      frames: this.anims.generateFrameNumbers("soldier_attack", {
+        start: 0,
+        end: 5,
+      }),
+      frameRate: 10,
+      repeat: -1,
+    });
+  }
+
   private spawnAttacker(): void {
     const isOrc = Phaser.Math.Between(0, 1) === 0;
 
-    const spriteKey = isOrc ? "orc_attack" : "soldier_attack";
+    const key = isOrc ? "orc_attack" : "soldier_attack";
+    const animKey = isOrc ? "orc_attack_anim" : "soldier_attack_anim";
 
     const attacker = this.add
       .sprite(
         Phaser.Math.Between(100, this.scale.width - 100),
         this.scale.height + CONFIG.attackers.spawnYOffset,
-        "orc_attack"
+        key
       )
-      .setScale(CONFIG.attackers.scale)
-      .play("orc_attack_anim");
-
-    // Add a simple pulsing animation to simulate the original spritesheet animation
-    this.tweens.add({
-      targets: attacker,
-      scaleX: CONFIG.attackers.scale * 1.1,
-      scaleY: CONFIG.attackers.scale * 1.1,
-      duration: 200,
-      yoyo: true,
-      repeat: -1,
-    });
+      .setScale(CONFIG.attackers.scale);
+    attacker.play(animKey);
 
     this.tweens.add({
       targets: attacker,
@@ -131,7 +131,6 @@ class ArenaScene extends Phaser.Scene {
 
         if (!this.hasHitOnce) {
           this.hasHitOnce = true;
-          this.time.delayedCall(1000, () => this.createFireworks());
         }
       },
     });
@@ -150,40 +149,6 @@ class ArenaScene extends Phaser.Scene {
     });
   }
 
-  private createFireworks(): void {
-    for (let i = 0; i < 10; i++) {
-      this.time.delayedCall(i * 200, () => {
-        const x = Phaser.Math.Between(100, this.cameras.main.width - 100);
-        const y = Phaser.Math.Between(100, this.cameras.main.height / 2);
-        this.createFirework(x, y);
-      });
-    }
-  }
-
-  private createFirework(x: number, y: number): void {
-    // Create simple firework effect with colored circles since we don't have the particle atlas
-    const colors = [0xff0000, 0xffff00, 0x00ff00, 0x0000ff, 0xff00ff];
-
-    for (let i = 0; i < 20; i++) {
-      const particle = this.add.circle(x, y, 3, colors[i % colors.length]);
-
-      const angle = (360 / 20) * i;
-      const speed = Phaser.Math.Between(50, 150);
-      const radians = Phaser.Math.DegToRad(angle);
-
-      this.tweens.add({
-        targets: particle,
-        x: x + Math.cos(radians) * speed,
-        y: y + Math.sin(radians) * speed + Phaser.Math.Between(50, 100),
-        alpha: 0,
-        scale: 0,
-        duration: 1000,
-        ease: "Quad.easeOut",
-        onComplete: () => particle.destroy(),
-      });
-    }
-  }
-
   private resize(gameSize: Phaser.Structs.Size): void {
     const { width, height } = gameSize;
     this.cameras.resize(width, height);
@@ -194,15 +159,7 @@ class ArenaScene extends Phaser.Scene {
   }
 }
 
-interface PhaserThanosGameProps {
-  className?: string;
-  style?: React.CSSProperties;
-}
-
-const PhaserThanosGame: React.FC<PhaserThanosGameProps> = ({
-  className,
-  style,
-}) => {
+const PhaserThanosGame: React.FC = () => {
   const gameRef = useRef<HTMLDivElement>(null);
   const phaserGameRef = useRef<Phaser.Game | null>(null);
 
@@ -242,7 +199,6 @@ const PhaserThanosGame: React.FC<PhaserThanosGameProps> = ({
     <div
       ref={gameRef}
       id="phaser-thanos-container"
-      className={className}
       style={{
         width: "800px",
         height: "600px",
@@ -250,7 +206,6 @@ const PhaserThanosGame: React.FC<PhaserThanosGameProps> = ({
         borderRadius: "12px",
         overflow: "hidden",
         boxShadow: "0 20px 60px rgba(139, 92, 246, 0.3)",
-        ...style,
       }}
     />
   );
