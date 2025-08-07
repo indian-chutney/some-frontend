@@ -12,6 +12,7 @@ const MS_TENANT_ID = "dd60b066-1b78-4515-84fb-a565c251cb5a";
 const MS_REDIRECT_URI = `${
   import.meta.env.VITE_BACKEND_URL
 }/api/v1/auth/redirect`;
+console.log(MS_REDIRECT_URI);
 
 const Login: React.FC = () => {
   const [isLoggingIn, setIsLoggingIn] = useState<boolean>(false);
