@@ -9,7 +9,8 @@ import Logo from "../components/Logo.tsx";
 // ---------------
 const MS_CLIENT_ID = "3ff100ef-fb6d-4809-a512-de5c525b0506";
 const MS_TENANT_ID = "dd60b066-1b78-4515-84fb-a565c251cb5a";
-const MS_REDIRECT_URI = "http://localhost:3000/api/v1/auth/redirect";
+const MS_REDIRECT_URI =
+  "https://applywizz-game-backend.vercel.app/api/v1/auth/redirect";
 
 const Login: React.FC = () => {
   const [isLoggingIn, setIsLoggingIn] = useState<boolean>(false);
