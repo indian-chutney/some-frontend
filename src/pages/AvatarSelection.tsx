@@ -1,128 +1,19 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { User, Check, ArrowRight, Shuffle, Palette, Star, Upload, Image } from 'lucide-react';
+import { ArrowRight, Shuffle, Palette, Star, Upload, Image } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
+import Avatar, { getAvailableAvatarIds, AvatarData } from '../components/Avatar';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
 import { colors, fonts, spacing } from '../utils/theme';
 import { useAuthContext } from '../hooks/hooks';
 import { backendPostRequest } from '../lib/backendRequest';
 
-type AvatarPattern = 'dots' | 'stripes' | 'waves' | 'gradient' | 'solid';
-
-interface Avatar {
-  id: number;
-  color: string;
-  pattern: AvatarPattern;
-  accent: string;
-}
-
-interface AvatarIconProps {
-  avatar: Avatar;
-  isSelected: boolean;
-  onClick: () => void;
-}
-
-const avatarData: Avatar[] = [
-  { id: 1, color: colors.primary, pattern: 'dots', accent: colors.secondary },
-  { id: 2, color: colors.secondary, pattern: 'stripes', accent: colors.primary },
-  { id: 3, color: colors.success, pattern: 'gradient', accent: colors.warning },
-  { id: 4, color: colors.warning, pattern: 'solid', accent: colors.success },
-  { id: 5, color: '#8b5cf6', pattern: 'waves', accent: colors.primary },
-  { id: 6, color: '#ec4899', pattern: 'dots', accent: colors.secondary },
-  { id: 7, color: '#06b6d4', pattern: 'gradient', accent: colors.warning },
-  { id: 8, color: '#84cc16', pattern: 'stripes', accent: colors.primary },
-  { id: 9, color: '#f97316', pattern: 'waves', accent: colors.success },
-];
-
-const AvatarIcon: React.FC<AvatarIconProps> = ({ avatar, isSelected, onClick }) => {
-  const getPatternStyle = (): React.CSSProperties => {
-    switch (avatar.pattern) {
-      case 'dots':
-        return {
-          backgroundImage: `radial-gradient(circle at 25% 25%, ${avatar.accent}40 2px, transparent 2px), radial-gradient(circle at 75% 75%, ${avatar.accent}40 2px, transparent 2px)`,
-          backgroundSize: '20px 20px',
-        };
-      case 'stripes':
-        return {
-          backgroundImage: `linear-gradient(45deg, ${avatar.accent}20 25%, transparent 25%, transparent 75%, ${avatar.accent}20 75%)`,
-          backgroundSize: '16px 16px',
-        };
-      case 'waves':
-        return {
-          backgroundImage: `repeating-linear-gradient(45deg, ${avatar.accent}20, ${avatar.accent}20 4px, transparent 4px, transparent 12px)`,
-        };
-      case 'gradient':
-        return {
-          background: `linear-gradient(135deg, ${avatar.color} 0%, ${avatar.accent} 100%)`,
-        };
-      default:
-        return {};
-    }
-  };
-
-  return (
-    <motion.div
-      onClick={onClick}
-      style={{
-        width: '120px',
-        height: '120px',
-        borderRadius: '50%',
-        backgroundColor: avatar.color,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        cursor: 'pointer',
-        position: 'relative',
-        overflow: 'hidden',
-        border: isSelected ? `3px solid ${colors.primary}` : `3px solid transparent`,
-        transition: 'all 0.3s ease',
-        ...getPatternStyle(),
-      }}
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
-      initial={{ opacity: 0, scale: 0.8 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.5, delay: avatar.id * 0.1 }}
-    >
-      <User 
-        size={40} 
-        style={{ 
-          color: colors.textPrimary, 
-          filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))',
-          zIndex: 2,
-        }}
-      />
-      
-      {isSelected && (
-        <motion.div
-          style={{
-            position: 'absolute',
-            top: '8px',
-            right: '8px',
-            width: '24px',
-            height: '24px',
-            backgroundColor: colors.primary,
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 3,
-          }}
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ type: 'spring', bounce: 0.5 }}
-        >
-          <Check size={14} style={{ color: colors.textPrimary }} />
-        </motion.div>
-      )}
-    </motion.div>
-  );
-};
+const avatarIds = getAvailableAvatarIds();
 
 const AvatarSelection: React.FC = () => {
-  const [selectedAvatar, setSelectedAvatar] = useState<Avatar | null>(null);
+  const [selectedAvatar, setSelectedAvatar] = useState<AvatarData | null>(null);
   const [isRandomizing, setIsRandomizing] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const navigate = useNavigate();
@@ -136,7 +27,7 @@ const AvatarSelection: React.FC = () => {
         // Send POST request to backend with avatar data
         await backendPostRequest('/avatar-info', token as string, selectedAvatar);
         
-        // Store selected avatar in localStorage with the specified format
+        // Store selected avatar in localStorage with the new simplified format
         localStorage.setItem('avatar', JSON.stringify(selectedAvatar));
         
         // Navigate to dashboard
@@ -158,7 +49,8 @@ const AvatarSelection: React.FC = () => {
     // Animate through random selections
     let count = 0;
     const interval = setInterval(() => {
-      const randomAvatar = avatarData[Math.floor(Math.random() * avatarData.length)];
+      const randomId = avatarIds[Math.floor(Math.random() * avatarIds.length)];
+      const randomAvatar: AvatarData = { id: randomId };
       setSelectedAvatar(randomAvatar);
       count++;
       
@@ -270,12 +162,14 @@ const AvatarSelection: React.FC = () => {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.4 }}
           >
-            {avatarData.map((avatar) => (
-              <AvatarIcon
-                key={avatar.id}
-                avatar={avatar}
-                isSelected={selectedAvatar?.id === avatar.id}
-                onClick={() => setSelectedAvatar(avatar)}
+            {avatarIds.map((id, index) => (
+              <Avatar
+                key={id}
+                id={id}
+                size={120}
+                isSelected={selectedAvatar?.id === id}
+                onClick={() => setSelectedAvatar({ id })}
+                animationDelay={index * 0.1}
               />
             ))}
           </motion.div>
@@ -393,52 +287,13 @@ const AvatarSelection: React.FC = () => {
                 transition={{ duration: 0.5 }}
               >
                 {selectedAvatar ? (
-                  <div style={{
-                    width: '160px',
-                    height: '160px',
-                    borderRadius: '50%',
-                    backgroundColor: selectedAvatar.color,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    position: 'relative',
-                    overflow: 'hidden',
-                    border: `4px solid ${colors.primary}`,
-                    boxShadow: `0 8px 32px ${selectedAvatar.color}40`,
-                    ...(() => {
-                      const getPatternStyle = (): React.CSSProperties => {
-                        switch (selectedAvatar.pattern) {
-                          case 'dots':
-                            return {
-                              backgroundImage: `radial-gradient(circle at 25% 25%, ${selectedAvatar.accent}40 2px, transparent 2px), radial-gradient(circle at 75% 75%, ${selectedAvatar.accent}40 2px, transparent 2px)`,
-                              backgroundSize: '20px 20px',
-                            };
-                          case 'stripes':
-                            return {
-                              backgroundImage: `linear-gradient(45deg, ${selectedAvatar.accent}20 25%, transparent 25%, transparent 75%, ${selectedAvatar.accent}20 75%)`,
-                              backgroundSize: '16px 16px',
-                            };
-                          case 'waves':
-                            return {
-                              backgroundImage: `repeating-linear-gradient(45deg, ${selectedAvatar.accent}20, ${selectedAvatar.accent}20 4px, transparent 4px, transparent 12px)`,
-                            };
-                          case 'gradient':
-                            return {
-                              background: `linear-gradient(135deg, ${selectedAvatar.color} 0%, ${selectedAvatar.accent} 100%)`,
-                            };
-                          default:
-                            return {};
-                        }
-                      };
-                      return getPatternStyle();
-                    })(),
-                  }}>
-                    <User 
-                      size={60} 
-                      style={{ 
-                        color: colors.textPrimary, 
-                        filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))',
-                        zIndex: 2,
+                  <div style={{ position: 'relative' }}>
+                    <Avatar
+                      id={selectedAvatar.id}
+                      size={160}
+                      isSelected={true}
+                      style={{
+                        boxShadow: `0 8px 32px rgba(139, 92, 246, 0.4)`,
                       }}
                     />
                     <motion.div
@@ -474,10 +329,19 @@ const AvatarSelection: React.FC = () => {
                     justifyContent: 'center',
                     border: `2px dashed ${colors.surfaceLight}`,
                   }}>
-                    <User 
-                      size={60} 
-                      style={{ color: colors.textMuted }}
-                    />
+                    <div
+                      style={{
+                        width: '60px',
+                        height: '60px',
+                        backgroundColor: colors.surface,
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <span style={{ fontSize: '24px' }}>👤</span>
+                    </div>
                   </div>
                 )}
               </motion.div>
@@ -501,14 +365,14 @@ const AvatarSelection: React.FC = () => {
                     margin: 0,
                     marginBottom: spacing.xs,
                   }}>
-                    Pattern: <span style={{ color: colors.primary, fontWeight: '600' }}>{selectedAvatar.pattern}</span>
+                    Avatar: <span style={{ color: colors.primary, fontWeight: '600' }}>#{selectedAvatar.id}</span>
                   </p>
                   <p style={{
                     fontSize: '0.9rem',
                     color: colors.textSecondary,
                     margin: 0,
                   }}>
-                    Style: <span style={{ color: colors.primary, fontWeight: '600' }}>Custom #{selectedAvatar.id}</span>
+                    Style: <span style={{ color: colors.primary, fontWeight: '600' }}>Premium Avatar</span>
                   </p>
                 </motion.div>
               )}

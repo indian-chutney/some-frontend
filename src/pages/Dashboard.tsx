@@ -299,6 +299,12 @@ const ProgressCard: React.FC<ProgressCardProps> = ({
 
 const Dashboard: React.FC = () => {
   const { scrollY } = useScroll();
+  // Transform values for Thanos going back when scrolling
+  const thanosY = useTransform(scrollY, [0, 400], [0, -100]);
+  const thanosScale = useTransform(scrollY, [0, 400], [1, 0.8]);
+  const thanosOpacity = useTransform(scrollY, [0, 400], [1, 0.7]);
+  
+  // Transform values for progress section
   const progressY = useTransform(scrollY, [200, 500], [100, 0]);
   const progressOpacity = useTransform(scrollY, [150, 300], [0, 1]);
 
@@ -380,17 +386,19 @@ const Dashboard: React.FC = () => {
           position: "relative",
         }}
       >
-        {/* Hero Section - Full Height */}
-        <div
+        {/* Hero Section - Full Screen Thanos */}
+        <motion.div
           style={{
             height: "100vh",
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
-            padding: window.innerWidth >= 768 ? spacing["2xl"] : spacing.lg,
             position: "relative",
             overflow: "hidden",
+            y: thanosY,
+            scale: thanosScale,
+            opacity: thanosOpacity,
           }}
         >
           {/* Background gradient */}
@@ -401,16 +409,86 @@ const Dashboard: React.FC = () => {
               left: 0,
               width: "100%",
               height: "100%",
-              background: `radial-gradient(ellipse at center, ${colors.primary}10 0%, transparent 70%)`,
+              background: `radial-gradient(ellipse at center, ${colors.primary}08 0%, transparent 60%)`,
               zIndex: 1,
             }}
           />
 
-          <HPBar />
+          {/* Motivational Text */}
           <motion.div
+            style={{
+              textAlign: "center",
+              marginBottom: spacing["2xl"],
+              zIndex: 3,
+              maxWidth: "800px",
+              padding: `0 ${spacing.lg}`,
+            }}
+            initial={{ opacity: 0, y: -30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1, delay: 0.5 }}
+          >
+            <motion.h1
+              style={{
+                fontSize: window.innerWidth >= 768 ? "2.5rem" : "1.8rem",
+                fontWeight: "800",
+                color: colors.textPrimary,
+                margin: 0,
+                marginBottom: spacing.lg,
+                lineHeight: 1.2,
+                textAlign: "center",
+                background: `linear-gradient(135deg, ${colors.textPrimary} 0%, ${colors.primaryLight} 100%)`,
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+                fontFamily: fonts.logo,
+              }}
+              animate={{
+                textShadow: [
+                  "0 0 0px rgba(139, 92, 246, 0)",
+                  "0 0 20px rgba(139, 92, 246, 0.3)",
+                  "0 0 0px rgba(139, 92, 246, 0)",
+                ],
+              }}
+              transition={{
+                duration: 3,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+            >
+              "Strength grows in the moments when you think you can't go on but you keep going anyway."
+            </motion.h1>
+            <motion.p
+              style={{
+                fontSize: window.innerWidth >= 768 ? "1.2rem" : "1rem",
+                color: colors.textSecondary,
+                margin: 0,
+                fontStyle: "italic",
+                opacity: 0.8,
+              }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.8 }}
+              transition={{ duration: 1, delay: 1 }}
+            >
+              — Embrace the challenge, achieve perfect balance
+            </motion.p>
+          </motion.div>
+
+          {/* HP Bar */}
+          <HPBar />
+
+          {/* Thanos Game - Full Width */}
+          <motion.div
+            style={{
+              width: "100%",
+              height: "70vh",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: 2,
+            }}
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 1, type: "spring", bounce: 0.3 }}
+            transition={{ duration: 1, type: "spring", bounce: 0.3, delay: 0.3 }}
           >
             <PhaserThanosGame />
           </motion.div>
@@ -422,6 +500,7 @@ const Dashboard: React.FC = () => {
               bottom: spacing["2xl"],
               left: "50%",
               transform: "translateX(-50%)",
+              zIndex: 3,
             }}
             animate={{ y: [0, 10, 0] }}
             transition={{ duration: 2, repeat: Infinity }}
@@ -455,7 +534,7 @@ const Dashboard: React.FC = () => {
               />
             </div>
           </motion.div>
-        </div>
+        </motion.div>
 
         {/* Progress Section - Separate scrollable area with improved styling */}
         <motion.div

@@ -171,10 +171,10 @@ const PhaserThanosGame: React.FC = () => {
       scale: {
         mode: Phaser.Scale.RESIZE,
         autoCenter: Phaser.Scale.CENTER_BOTH,
-        width: 800,
-        height: 600,
+        width: "100%",
+        height: "100%",
       },
-      backgroundColor: "#000000",
+      backgroundColor: "transparent",
       parent: gameRef.current,
       physics: {
         default: "arcade",
@@ -200,12 +200,12 @@ const PhaserThanosGame: React.FC = () => {
       ref={gameRef}
       id="phaser-thanos-container"
       style={{
-        width: "800px",
-        height: "600px",
-        margin: "0 auto",
-        borderRadius: "12px",
+        width: "100%",
+        height: "100%",
+        minHeight: "60vh",
+        borderRadius: "0",
         overflow: "hidden",
-        boxShadow: "0 20px 60px rgba(139, 92, 246, 0.3)",
+        background: "transparent",
       }}
     />
   );
