@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { User, Settings as SettingsIcon } from "lucide-react";
+import { Settings as SettingsIcon } from "lucide-react";
 import {
   LineChart,
   Line,
@@ -11,6 +11,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import Sidebar from "../components/Sidebar";
+import Avatar, { AvatarData } from "../components/Avatar";
 import { Card } from "../components/ui/card";
 import { colors, fonts, spacing } from "../utils/theme";
 import { useAuthContext, useBackendQuery } from "../hooks/hooks";
@@ -18,18 +19,9 @@ import { decodeJwt } from "jose";
 import { isCareerAssociate, getCurrentRole } from "../utils/roleUtils";
 import { RoleFallbackUI, ErrorUI, LoadingUI, NoDataUI } from "../components/FallbackComponents";
 
-type AvatarPattern = 'dots' | 'stripes' | 'waves' | 'gradient' | 'solid';
-
-interface Avatar {
-  id: number;
-  color: string;
-  pattern: AvatarPattern;
-  accent: string;
-}
-
 const Settings: React.FC = () => {
   const [selectedTimeRange, setSelectedTimeRange] = useState<string>("week");
-  const [selectedAvatar, setSelectedAvatar] = useState<Avatar | null>(null);
+  const [selectedAvatar, setSelectedAvatar] = useState<AvatarData | null>(null);
 
   const { token } = useAuthContext();
   const role = localStorage.getItem("role");
@@ -42,7 +34,12 @@ const Settings: React.FC = () => {
     if (storedAvatar) {
       try {
         const parsedAvatar = JSON.parse(storedAvatar);
-        setSelectedAvatar(parsedAvatar);
+        // Handle both old format (with color/pattern) and new format (just id)
+        if (typeof parsedAvatar === 'object' && parsedAvatar.id) {
+          setSelectedAvatar({ id: parsedAvatar.id });
+        } else if (typeof parsedAvatar === 'number') {
+          setSelectedAvatar({ id: parsedAvatar });
+        }
       } catch (error) {
         console.error('Failed to parse stored avatar:', error);
       }
@@ -67,72 +64,17 @@ const Settings: React.FC = () => {
     { value: "all_time", label: "All Time" },
   ];
 
-  // Function to get pattern style for avatar display
-  const getPatternStyle = (avatar: Avatar): React.CSSProperties => {
-    switch (avatar.pattern) {
-      case 'dots':
-        return {
-          backgroundImage: `radial-gradient(circle at 25% 25%, ${avatar.accent}40 2px, transparent 2px), radial-gradient(circle at 75% 75%, ${avatar.accent}40 2px, transparent 2px)`,
-          backgroundSize: '20px 20px',
-        };
-      case 'stripes':
-        return {
-          backgroundImage: `linear-gradient(45deg, ${avatar.accent}20 25%, transparent 25%, transparent 75%, ${avatar.accent}20 75%)`,
-          backgroundSize: '16px 16px',
-        };
-      case 'waves':
-        return {
-          backgroundImage: `repeating-linear-gradient(45deg, ${avatar.accent}20, ${avatar.accent}20 4px, transparent 4px, transparent 12px)`,
-        };
-      case 'gradient':
-        return {
-          background: `linear-gradient(135deg, ${avatar.color} 0%, ${avatar.accent} 100%)`,
-        };
-      default:
-        return {};
-    }
-  };
-
   const renderAvatar = () => {
     if (selectedAvatar) {
       return (
-        <div
+        <Avatar
+          id={selectedAvatar.id}
+          size={120}
+          showStatus={true}
           style={{
-            width: "120px",
-            height: "120px",
-            backgroundColor: selectedAvatar.color,
-            borderRadius: "50%",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            position: "relative",
-            boxShadow: `0 8px 32px ${selectedAvatar.color}40`,
-            overflow: "hidden",
-            ...getPatternStyle(selectedAvatar),
+            boxShadow: `0 8px 32px rgba(139, 92, 246, 0.4)`,
           }}
-        >
-          <User 
-            size={40} 
-            style={{ 
-              color: colors.textPrimary, 
-              filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))',
-              zIndex: 2,
-            }}
-          />
-          {/* Status indicator */}
-          <div
-            style={{
-              position: "absolute",
-              bottom: "8px",
-              right: "8px",
-              width: "24px",
-              height: "24px",
-              backgroundColor: colors.success,
-              borderRadius: "50%",
-              border: `3px solid ${colors.surface}`,
-            }}
-          />
-        </div>
+        />
       );
     }
 
@@ -272,8 +214,8 @@ const Settings: React.FC = () => {
               style={{
                 padding: spacing["2xl"],
                 marginBottom: spacing.xl,
-                background: `linear-gradient(135deg, ${selectedAvatar.color}10 0%, ${selectedAvatar.accent}05 100%)`,
-                border: `1px solid ${selectedAvatar.color}20`,
+                background: `linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(139, 92, 246, 0.05) 100%)`,
+                border: `1px solid rgba(139, 92, 246, 0.2)`,
               }}
             >
               <div
@@ -299,16 +241,15 @@ const Settings: React.FC = () => {
                     style={{
                       width: "32px",
                       height: "32px",
-                      backgroundColor: selectedAvatar.color,
+                      backgroundColor: colors.primary,
                       borderRadius: "8px",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      ...getPatternStyle(selectedAvatar),
                     }}
                     whileHover={{ scale: 1.1 }}
                   >
-                    <User size={18} style={{ color: colors.textPrimary }} />
+                    <span style={{ fontSize: '18px' }}>👤</span>
                   </motion.div>
                   Your Selected Avatar
                 </h3>
@@ -326,25 +267,13 @@ const Settings: React.FC = () => {
                 }}
                 whileHover={{ backgroundColor: `${colors.surface}90` }}
               >
-                <div
+                <Avatar
+                  id={selectedAvatar.id}
+                  size={60}
                   style={{
-                    width: "60px",
-                    height: "60px",
-                    backgroundColor: selectedAvatar.color,
-                    borderRadius: "12px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: "1.5rem",
-                    fontWeight: "700",
-                    color: colors.textPrimary,
-                    boxShadow: `0 4px 12px ${selectedAvatar.color}40`,
-                    overflow: "hidden",
-                    ...getPatternStyle(selectedAvatar),
+                    boxShadow: `0 4px 12px rgba(139, 92, 246, 0.4)`,
                   }}
-                >
-                  <User size={24} style={{ color: colors.textPrimary }} />
-                </div>
+                />
 
                 <div style={{ flex: 1 }}>
                   <h4
@@ -356,7 +285,7 @@ const Settings: React.FC = () => {
                       marginBottom: spacing.xs,
                     }}
                   >
-                    Custom Avatar #{selectedAvatar.id}
+                    Premium Avatar #{selectedAvatar.id}
                   </h4>
                   <p
                     style={{
@@ -366,7 +295,7 @@ const Settings: React.FC = () => {
                       marginBottom: spacing.xs,
                     }}
                   >
-                    Pattern: {selectedAvatar.pattern} • Style: Personalized
+                    High-quality avatar • Personalized style
                   </p>
                   <div
                     style={{
@@ -375,17 +304,17 @@ const Settings: React.FC = () => {
                       flexWrap: "wrap",
                     }}
                   >
-                    {["Unique Design", "Personal Style", "Custom Colors"].map(
+                    {["Unique Design", "Premium Quality", "Personal Style"].map(
                       (feature) => (
                         <span
                           key={feature}
                           style={{
                             padding: `${spacing.xs} ${spacing.sm}`,
-                            backgroundColor: `${selectedAvatar.color}20`,
+                            backgroundColor: `rgba(139, 92, 246, 0.2)`,
                             borderRadius: "4px",
                             fontSize: "0.75rem",
                             fontWeight: "600",
-                            color: selectedAvatar.color,
+                            color: colors.primary,
                           }}
                         >
                           {feature}
