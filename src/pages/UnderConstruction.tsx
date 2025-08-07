@@ -170,8 +170,6 @@ export const Settings: React.FC = () => {
 
   const chartExists = Array.isArray((chartData as any)?.user_data);
 
-  console.log(chartData);
-
   const handleTimeRangeChange = (range: string) => {
     setSelectedTimeRange(range);
   };
@@ -301,7 +299,7 @@ export const Settings: React.FC = () => {
                   marginBottom: spacing["2xl"],
                 }}
               >
-                {user.preferred_username as string}
+                {user.email as string}
               </p>
             </motion.div>
           </Card>
