@@ -1,5 +1,5 @@
 import axios from "axios";
-const backend_url = "https://applywizz-game-backend.vercel.app/api/v1";
+const backend_url = `${import.meta.env.VITE_BACKEND_URL}/api/v1`;
 
 export async function backendRequest(endpoint: string, token: string) {
   try {
