@@ -6,6 +6,8 @@ import Sidebar from '../components/Sidebar';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
 import { colors, fonts, spacing } from '../utils/theme';
+import { useAuthContext } from '../hooks/hooks';
+import { backendPostRequest } from '../lib/backendRequest';
 
 type AvatarPattern = 'dots' | 'stripes' | 'waves' | 'gradient' | 'solid';
 
@@ -122,13 +124,31 @@ const AvatarIcon: React.FC<AvatarIconProps> = ({ avatar, isSelected, onClick }) 
 const AvatarSelection: React.FC = () => {
   const [selectedAvatar, setSelectedAvatar] = useState<Avatar | null>(null);
   const [isRandomizing, setIsRandomizing] = useState<boolean>(false);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const navigate = useNavigate();
+  const { token } = useAuthContext();
 
-  const handleContinue = (): void => {
-    if (selectedAvatar) {
-      // Store selected avatar in localStorage for later use
-      localStorage.setItem('selectedAvatar', JSON.stringify(selectedAvatar));
-      navigate('/dashboard');
+  const handleContinue = async (): Promise<void> => {
+    if (selectedAvatar && !isSubmitting) {
+      setIsSubmitting(true);
+      
+      try {
+        // Send POST request to backend with avatar data
+        await backendPostRequest('/avatar-info', token as string, selectedAvatar);
+        
+        // Store selected avatar in localStorage with the specified format
+        localStorage.setItem('avatar', JSON.stringify(selectedAvatar));
+        
+        // Navigate to dashboard
+        navigate('/dashboard');
+      } catch (error) {
+        console.error('Failed to save avatar:', error);
+        // Continue to dashboard even if backend request fails
+        localStorage.setItem('avatar', JSON.stringify(selectedAvatar));
+        navigate('/dashboard');
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -496,7 +516,7 @@ const AvatarSelection: React.FC = () => {
               {/* Continue Button */}
               <Button
                 onClick={handleContinue}
-                disabled={!selectedAvatar}
+                disabled={!selectedAvatar || isSubmitting}
                 size="lg"
                 style={{
                   width: '100%',
@@ -504,8 +524,8 @@ const AvatarSelection: React.FC = () => {
                   marginBottom: spacing.lg,
                 }}
               >
-                <span>Continue to Dashboard</span>
-                {selectedAvatar && (
+                <span>{isSubmitting ? 'Saving...' : 'Continue to Dashboard'}</span>
+                {selectedAvatar && !isSubmitting && (
                   <motion.div
                     animate={{ x: [0, 4, 0] }}
                     transition={{
