@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from 'react';
-import Phaser from 'phaser';
+import React, { useEffect, useRef } from "react";
+import Phaser from "phaser";
 
 interface GameConfig {
   thanos: {
@@ -29,8 +29,8 @@ const CONFIG: GameConfig = {
     hitEffect: {
       scaleIncrease: 0.08,
       tintColor: 0xff0000,
-      duration: 49
-    }
+      duration: 49,
+    },
   },
   attackers: {
     scale: 3,
@@ -38,9 +38,9 @@ const CONFIG: GameConfig = {
     targetYOffset: -200,
     animation: {
       duration: 700,
-      ease: 'Power1'
-    }
-  }
+      ease: "Power1",
+    },
+  },
 };
 
 class ArenaScene extends Phaser.Scene {
@@ -57,42 +57,38 @@ class ArenaScene extends Phaser.Scene {
 
     // Create simple colored rectangles as placeholders for sprites
     // In a real implementation, these would be actual spritesheets
-    this.load.image("orc_attack", "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==");
-    this.load.image("soldier_attack", "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==");
-    
-    // Create colored squares for attackers
-    this.load.on('complete', () => {
-      this.createAttackerSprites();
-    });
-  }
 
-  private createAttackerSprites(): void {
-    // Create colored rectangles for orc and soldier
-    const graphics = this.add.graphics();
-    
-    // Orc - green rectangle
-    graphics.fillStyle(0x00ff00);
-    graphics.fillRect(0, 0, 100, 100);
-    graphics.generateTexture('orc_sprite', 100, 100);
-    
-    // Soldier - blue rectangle  
-    graphics.fillStyle(0x0000ff);
-    graphics.fillRect(0, 0, 100, 100);
-    graphics.generateTexture('soldier_sprite', 100, 100);
-    
-    graphics.destroy();
+    this.load.spritesheet("orc_attack", "/assets/Orc-Attack01.png", {
+      frameWidth: 88,
+      frameHeight: 100,
+    });
+    this.load.spritesheet("soldier_attack", "/assets/Soldier-Attack01.png", {
+      frameWidth: 88,
+      frameHeight: 100,
+    });
   }
 
   create(): void {
     const centerX = this.cameras.main.width / 2;
-    
-    this.thanos = this.add.image(centerX, CONFIG.thanos.yPosition, "thanos")
+
+    this.thanos = this.add
+      .image(centerX, CONFIG.thanos.yPosition, "thanos")
       .setScale(CONFIG.thanos.scale);
+
+    this.anims.create({
+      key: "orc_attack_anim",
+      frames: this.anims.generateFrameNumbers("orc_attack", {
+        start: 0,
+        end: 6,
+      }),
+      frameRate: 10,
+      repeat: -1,
+    });
 
     this.time.addEvent({
       delay: 2000,
       loop: true,
-      callback: () => this.spawnAttacker()
+      callback: () => this.spawnAttacker(),
     });
 
     this.scale.on("resize", this.resize, this);
@@ -100,13 +96,17 @@ class ArenaScene extends Phaser.Scene {
 
   private spawnAttacker(): void {
     const isOrc = Phaser.Math.Between(0, 1) === 0;
-    const spriteKey = isOrc ? "orc_sprite" : "soldier_sprite";
 
-    const attacker = this.add.image(
-      Phaser.Math.Between(100, this.scale.width - 100),
-      this.scale.height + CONFIG.attackers.spawnYOffset,
-      spriteKey
-    ).setScale(CONFIG.attackers.scale);
+    const spriteKey = isOrc ? "orc_attack" : "soldier_attack";
+
+    const attacker = this.add
+      .sprite(
+        Phaser.Math.Between(100, this.scale.width - 100),
+        this.scale.height + CONFIG.attackers.spawnYOffset,
+        "orc_attack"
+      )
+      .setScale(CONFIG.attackers.scale)
+      .play("orc_attack_anim");
 
     // Add a simple pulsing animation to simulate the original spritesheet animation
     this.tweens.add({
@@ -115,7 +115,7 @@ class ArenaScene extends Phaser.Scene {
       scaleY: CONFIG.attackers.scale * 1.1,
       duration: 200,
       yoyo: true,
-      repeat: -1
+      repeat: -1,
     });
 
     this.tweens.add({
@@ -133,7 +133,7 @@ class ArenaScene extends Phaser.Scene {
           this.hasHitOnce = true;
           this.time.delayedCall(1000, () => this.createFireworks());
         }
-      }
+      },
     });
   }
 
@@ -146,7 +146,7 @@ class ArenaScene extends Phaser.Scene {
       duration: CONFIG.thanos.hitEffect.duration,
       yoyo: true,
       ease: "Quad.easeInOut",
-      onComplete: () => this.thanos.clearTint()
+      onComplete: () => this.thanos.clearTint(),
     });
   }
 
@@ -163,14 +163,14 @@ class ArenaScene extends Phaser.Scene {
   private createFirework(x: number, y: number): void {
     // Create simple firework effect with colored circles since we don't have the particle atlas
     const colors = [0xff0000, 0xffff00, 0x00ff00, 0x0000ff, 0xff00ff];
-    
+
     for (let i = 0; i < 20; i++) {
       const particle = this.add.circle(x, y, 3, colors[i % colors.length]);
-      
+
       const angle = (360 / 20) * i;
       const speed = Phaser.Math.Between(50, 150);
       const radians = Phaser.Math.DegToRad(angle);
-      
+
       this.tweens.add({
         targets: particle,
         x: x + Math.cos(radians) * speed,
@@ -178,8 +178,8 @@ class ArenaScene extends Phaser.Scene {
         alpha: 0,
         scale: 0,
         duration: 1000,
-        ease: 'Quad.easeOut',
-        onComplete: () => particle.destroy()
+        ease: "Quad.easeOut",
+        onComplete: () => particle.destroy(),
       });
     }
   }
@@ -199,7 +199,10 @@ interface PhaserThanosGameProps {
   style?: React.CSSProperties;
 }
 
-const PhaserThanosGame: React.FC<PhaserThanosGameProps> = ({ className, style }) => {
+const PhaserThanosGame: React.FC<PhaserThanosGameProps> = ({
+  className,
+  style,
+}) => {
   const gameRef = useRef<HTMLDivElement>(null);
   const phaserGameRef = useRef<Phaser.Game | null>(null);
 
@@ -212,17 +215,17 @@ const PhaserThanosGame: React.FC<PhaserThanosGameProps> = ({ className, style })
         mode: Phaser.Scale.RESIZE,
         autoCenter: Phaser.Scale.CENTER_BOTH,
         width: 800,
-        height: 600
+        height: 600,
       },
       backgroundColor: "#000000",
       parent: gameRef.current,
       physics: {
         default: "arcade",
         arcade: {
-          debug: false
-        }
+          debug: false,
+        },
       },
-      scene: [ArenaScene]
+      scene: [ArenaScene],
     };
 
     phaserGameRef.current = new Phaser.Game(config);
@@ -236,18 +239,18 @@ const PhaserThanosGame: React.FC<PhaserThanosGameProps> = ({ className, style })
   }, []);
 
   return (
-    <div 
-      ref={gameRef} 
+    <div
+      ref={gameRef}
       id="phaser-thanos-container"
       className={className}
       style={{
-        width: '800px',
-        height: '600px',
-        margin: '0 auto',
-        borderRadius: '12px',
-        overflow: 'hidden',
-        boxShadow: '0 20px 60px rgba(139, 92, 246, 0.3)',
-        ...style
+        width: "800px",
+        height: "600px",
+        margin: "0 auto",
+        borderRadius: "12px",
+        overflow: "hidden",
+        boxShadow: "0 20px 60px rgba(139, 92, 246, 0.3)",
+        ...style,
       }}
     />
   );

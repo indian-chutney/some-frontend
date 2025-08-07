@@ -310,11 +310,11 @@ const Dashboard: React.FC = () => {
   const fallbackProgressData = {
     todays_tasks: "5",
     progress: "80% Complete",
-    weeks_tasks: "23", 
+    weeks_tasks: "23",
     weeks_progress: "92% Complete",
     months_tasks: "87",
     months_progress: "78% Complete",
-    all_time_tasks: "342"
+    all_time_tasks: "342",
   };
 
   const data = error || !progress_data ? fallbackProgressData : progress_data;
@@ -407,6 +407,7 @@ const Dashboard: React.FC = () => {
             }}
           />
 
+          <HPBar />
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -414,7 +415,6 @@ const Dashboard: React.FC = () => {
           >
             <PhaserThanosGame />
           </motion.div>
-          <HPBar />
 
           {/* Scroll indicator */}
           <motion.div

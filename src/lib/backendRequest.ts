@@ -1,5 +1,5 @@
 import axios from "axios";
-const backend_url = "http://localhost:3000/api/v1";
+const backend_url = "https://applywizz-game-backend.vercel.app/api/v1";
 
 export async function backendRequest(endpoint: string, token: string) {
   try {
@@ -15,7 +15,11 @@ export async function backendRequest(endpoint: string, token: string) {
   }
 }
 
-export async function backendPostRequest(endpoint: string, token: string, data: any) {
+export async function backendPostRequest(
+  endpoint: string,
+  token: string,
+  data: any
+) {
   try {
     const res = await axios.post(`${backend_url}${endpoint}`, data, {
       headers: {
@@ -25,7 +29,10 @@ export async function backendPostRequest(endpoint: string, token: string, data: 
     });
     return res.data;
   } catch (error: any) {
-    console.error("POST request failed:", error?.response?.data || error.message);
+    console.error(
+      "POST request failed:",
+      error?.response?.data || error.message
+    );
     throw error;
   }
 }
