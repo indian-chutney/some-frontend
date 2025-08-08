@@ -201,7 +201,7 @@ const PhaserThanosGame: React.FC = () => {
       id="phaser-thanos-container"
       style={{
         width: "100%",
-        height: "100%",
+        height: "90vh",
         minHeight: "60vh",
         borderRadius: "0",
         overflow: "hidden",
