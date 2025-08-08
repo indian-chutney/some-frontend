@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { spacing, colors, fonts } from "../utils/theme";
-import logoSvg from "../assets/logo.svg";
+import logoSvg from "./../../public/assets/logo.svg";
 
 interface LogoProps {
   size?: "small" | "medium" | "large";
