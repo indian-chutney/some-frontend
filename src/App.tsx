@@ -16,7 +16,6 @@ import "./App.css";
 import { AuthContextProvider } from "./contexts/contexts";
 import { useAuthContext } from "./hooks/hooks";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import AuthSuccess from "./pages/AuthSuccess";
 
 interface PageTransitionProps {
   children: React.ReactNode;
@@ -56,7 +55,6 @@ const PageRoutes = () => {
   return (
     <AnimatePresence mode="wait">
       <Routes location={location}>
-        <Route path="/auth/success" element={<AuthSuccess />} />
         {isAuthenticated ? (
           <>
             <Route
