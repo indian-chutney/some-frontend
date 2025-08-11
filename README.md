@@ -21,7 +21,7 @@ A modern, minimal, animated frontend UI/UX for a productivity app built with Rea
 ## Pages & Features
 
 ### 🔐 Authentication
-- **Login Page**: Clean, centered form with email/password inputs
+- **Login Page**: Clean email/password form that connects to backend API
 - **Welcome Page**: Animated onboarding with sparkles and gradient effects
 - **Avatar Selection**: Interactive grid of colorful avatar options
 
@@ -35,6 +35,18 @@ A modern, minimal, animated frontend UI/UX for a productivity app built with Rea
 - **Sidebar**: Clean navigation with icons and hover effects
 - **Pages**: Dashboard, Settings, Leaderboard, Spaces, Game Engine
 - **Under Construction**: Placeholder pages with animated construction icons
+
+## Environment Variables
+
+The application requires the following environment variable:
+
+- `VITE_BACKEND_URL`: The base URL of your backend API (e.g., `http://localhost:3000`)
+
+Create a `.env` file in the root directory:
+
+```bash
+VITE_BACKEND_URL=http://localhost:3000
+```
 
 ## Quick Start
 
@@ -54,11 +66,10 @@ npm run preview
 
 ## User Flow
 
-1. **Login** (`/`) - Enter any credentials to proceed
-2. **Welcome** (`/welcome`) - Animated onboarding screen
-3. **Avatar Selection** (`/avatar`) - Choose from 9 unique avatar designs
-4. **Dashboard** (`/dashboard`) - Main productivity interface with Thanos character
-5. **Navigation** - Use sidebar to explore other sections
+1. **Login** (`/`) - Enter valid email/password credentials to authenticate via backend API
+2. **Avatar Selection** (`/avatar`) - Choose from 9 unique avatar designs
+3. **Dashboard** (`/dashboard`) - Main productivity interface with animated character
+4. **Navigation** - Use sidebar to explore other sections
 
 ## Animations & Interactions
 
