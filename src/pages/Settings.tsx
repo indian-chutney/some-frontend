@@ -23,15 +23,15 @@ import {
   LoadingUI,
   NoDataUI,
 } from "../components/FallbackComponents";
+import { useNavigate } from "react-router-dom";
 
 const Settings: React.FC = () => {
   const [selectedTimeRange, setSelectedTimeRange] = useState<string>("week");
   const [selectedAvatar, setSelectedAvatar] = useState<AvatarData | null>(null);
+  const navigator = useNavigate();
 
-  const { token } = useAuthContext();
+  const { logout } = useAuthContext();
   const role = localStorage.getItem("role");
-
-  const user = decodeJwt(token as string);
 
   // Load avatar from localStorage on component mount
   useEffect(() => {
@@ -57,10 +57,11 @@ const Settings: React.FC = () => {
     `/user-graph?data=${selectedTimeRange}`
   );
 
-  const { data: userData, isLoading } = useBackendQuery(
-    ["user-info"],
-    "/user-info"
-  );
+  const {
+    data: userData,
+    isLoading: userLoading,
+    isError: userError,
+  } = useBackendQuery(["user-info"], "/user-info");
 
   const chartExists = Array.isArray((chartData as any)?.user_data);
 
@@ -189,35 +190,51 @@ const Settings: React.FC = () => {
             </motion.div>
 
             {/* User Info */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-            >
-              <h2
-                style={{
-                  fontSize: "1.5rem",
-                  fontWeight: "600",
-                  color: colors.textPrimary,
-                  margin: 0,
-                  marginBottom: spacing.xs,
-                }}
+            {userLoading ? (
+              <div style={{ height: 64 }} /> // skeleton placeholder if you want
+            ) : userError ? (
+              <p style={{ color: colors.error }}>Failed to load user info</p>
+            ) : !userData ? (
+              <p style={{ color: colors.textSecondary }}>No user info</p>
+            ) : (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
               >
-                {(userData as any).username as string}
-              </h2>
-              <p
-                style={{
-                  color: colors.textSecondary,
-                  margin: 0,
-                  fontSize: "1rem",
-                  marginBottom: spacing["2xl"],
-                }}
-              >
-                {(userData as any).email as string}
-              </p>
-            </motion.div>
+                <h2
+                  style={{
+                    fontSize: "1.5rem",
+                    fontWeight: 600,
+                    color: colors.textPrimary,
+                    margin: 0,
+                    marginBottom: spacing.xs,
+                  }}
+                >
+                  {(userData as any)?.username}
+                </h2>
+                <p
+                  style={{
+                    color: colors.textSecondary,
+                    margin: 0,
+                    fontSize: "1rem",
+                  }}
+                >
+                  {(userData as any)?.email}
+                </p>
+                <p
+                  style={{
+                    color: colors.textSecondary,
+                    margin: 0,
+                    fontSize: "1rem",
+                    marginBottom: spacing["2xl"],
+                  }}
+                >
+                  ({(userData as any)?.team})
+                </p>
+              </motion.div>
+            )}
           </Card>
-
           {/* Avatar Info Section - Show when custom avatar is selected */}
           {selectedAvatar && (
             <Card
@@ -681,6 +698,12 @@ const Settings: React.FC = () => {
               }}
               whileHover={{ backgroundColor: `${colors.error}10` }}
               whileTap={{ scale: 0.98 }}
+              onClick={() => {
+                logout();
+                setTimeout(() => {
+                  navigator("/");
+                }, 2000);
+              }}
             >
               Logout
             </motion.button>
@@ -692,4 +715,3 @@ const Settings: React.FC = () => {
 };
 
 export default Settings;
-

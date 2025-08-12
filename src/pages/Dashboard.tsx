@@ -1,13 +1,6 @@
 import React from "react";
-import { motion, useScroll, useTransform, MotionValue } from "framer-motion";
-import {
-  Target,
-  TrendingUp,
-  Calendar,
-  Trophy,
-  Zap,
-  LucideIcon,
-} from "lucide-react";
+import { motion, useScroll, useTransform } from "framer-motion";
+import { Target, TrendingUp, Calendar, Trophy, LucideIcon } from "lucide-react";
 import Sidebar from "../components/Sidebar";
 import PhaserThanosGame from "../components/PhaserThanosGame";
 import { Card, CardContent } from "../components/ui/card";

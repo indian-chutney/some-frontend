@@ -8,6 +8,7 @@ export async function backendRequest(endpoint: string, token: string) {
         Authorization: `Bearer ${token}`,
       },
     });
+    console.log("came here");
     return res.data;
   } catch (error: any) {
     console.error("Request failed:", error?.response?.data || error.message);

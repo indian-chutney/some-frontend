@@ -13,9 +13,11 @@ export const useAuthContext = () => {
 
 export const useBackendQuery = (key: any, endpoint: string) => {
   const { token } = useAuthContext();
+  console.log(`${endpoint} endpoint hit`);
   return useQuery({
     queryKey: [key],
-    queryFn: () => backendRequest(endpoint, token as string),
+    queryFn: async () => await backendRequest(endpoint, token as string),
+    enabled: Boolean(token),
     staleTime: 10000, // optional: how long data is "fresh"
     refetchInterval: 10000,
   });
