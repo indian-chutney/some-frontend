@@ -413,6 +413,7 @@ const Dashboard: React.FC = () => {
 
           <HPBar />
           <motion.div
+            style={{ backgroundColor: "transparent", padding: "20px" }}
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 1, type: "spring", bounce: 0.3 }}

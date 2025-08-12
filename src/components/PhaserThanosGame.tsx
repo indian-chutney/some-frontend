@@ -203,7 +203,7 @@ const PhaserThanosGame: React.FC = () => {
         width: "100%",
         height: "90vh",
         minHeight: "60vh",
-        borderRadius: "0",
+        borderRadius: "20px",
         overflow: "hidden",
         background: "transparent",
       }}

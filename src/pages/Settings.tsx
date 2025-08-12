@@ -17,7 +17,12 @@ import { colors, fonts, spacing } from "../utils/theme";
 import { useAuthContext, useBackendQuery } from "../hooks/hooks";
 import { decodeJwt } from "jose";
 import { isCareerAssociate, getCurrentRole } from "../utils/roleUtils";
-import { RoleFallbackUI, ErrorUI, LoadingUI, NoDataUI } from "../components/FallbackComponents";
+import {
+  RoleFallbackUI,
+  ErrorUI,
+  LoadingUI,
+  NoDataUI,
+} from "../components/FallbackComponents";
 
 const Settings: React.FC = () => {
   const [selectedTimeRange, setSelectedTimeRange] = useState<string>("week");
@@ -30,18 +35,18 @@ const Settings: React.FC = () => {
 
   // Load avatar from localStorage on component mount
   useEffect(() => {
-    const storedAvatar = localStorage.getItem('avatar');
+    const storedAvatar = localStorage.getItem("avatar");
     if (storedAvatar) {
       try {
         const parsedAvatar = JSON.parse(storedAvatar);
         // Handle both old format (with color/pattern) and new format (just id)
-        if (typeof parsedAvatar === 'object' && parsedAvatar.id) {
+        if (typeof parsedAvatar === "object" && parsedAvatar.id) {
           setSelectedAvatar({ id: parsedAvatar.id });
-        } else if (typeof parsedAvatar === 'number') {
+        } else if (typeof parsedAvatar === "number") {
           setSelectedAvatar({ id: parsedAvatar });
         }
       } catch (error) {
-        console.error('Failed to parse stored avatar:', error);
+        console.error("Failed to parse stored avatar:", error);
       }
     }
   }, []);
@@ -50,6 +55,11 @@ const Settings: React.FC = () => {
   const { data: chartData, isLoading: chartLoading } = useBackendQuery(
     ["user-graph", selectedTimeRange],
     `/user-graph?data=${selectedTimeRange}`
+  );
+
+  const { data: userData, isLoading } = useBackendQuery(
+    ["user-info"],
+    "/user-info"
   );
 
   const chartExists = Array.isArray((chartData as any)?.user_data);
@@ -193,7 +203,7 @@ const Settings: React.FC = () => {
                   marginBottom: spacing.xs,
                 }}
               >
-                {user.name as string}
+                {(userData as any).username as string}
               </h2>
               <p
                 style={{
@@ -203,7 +213,7 @@ const Settings: React.FC = () => {
                   marginBottom: spacing["2xl"],
                 }}
               >
-                {user.email as string}
+                {(userData as any).email as string}
               </p>
             </motion.div>
           </Card>
@@ -249,7 +259,7 @@ const Settings: React.FC = () => {
                     }}
                     whileHover={{ scale: 1.1 }}
                   >
-                    <span style={{ fontSize: '18px' }}>👤</span>
+                    <span style={{ fontSize: "18px" }}>👤</span>
                   </motion.div>
                   Your Selected Avatar
                 </h3>
@@ -367,7 +377,10 @@ const Settings: React.FC = () => {
                   }}
                   whileHover={{ scale: 1.1 }}
                 >
-                  <SettingsIcon size={18} style={{ color: colors.textPrimary }} />
+                  <SettingsIcon
+                    size={18}
+                    style={{ color: colors.textPrimary }}
+                  />
                 </motion.div>
                 Your Selected Role
               </h3>
@@ -544,19 +557,17 @@ const Settings: React.FC = () => {
                 transition={{ duration: 0.5, delay: 0.4 }}
               >
                 {chartLoading ? (
-                  <LoadingUI 
-                    type="skeleton" 
+                  <LoadingUI
+                    type="skeleton"
                     message="Loading your progress chart..."
                   />
                 ) : !chartData ? (
-                  <NoDataUI 
+                  <NoDataUI
                     title="No Chart Data"
                     message="We couldn't find any chart data for the selected time range. Try a different time period or complete some tasks to see your progress."
                   />
                 ) : !chartExists ? (
-                  <ErrorUI 
-                    error="Invalid chart data format received from server"
-                  />
+                  <ErrorUI error="Invalid chart data format received from server" />
                 ) : (
                   <ResponsiveContainer width="100%" height={400}>
                     <LineChart
@@ -641,7 +652,9 @@ const Settings: React.FC = () => {
           ) : (
             <RoleFallbackUI
               title="Progress Analytics"
-              message={`Advanced progress analytics are available for career associates. Your current role is "${getCurrentRole() || 'not set'}". Contact your admin to access detailed analytics.`}
+              message={`Advanced progress analytics are available for career associates. Your current role is "${
+                getCurrentRole() || "not set"
+              }". Contact your admin to access detailed analytics.`}
             />
           )}
 
@@ -679,3 +692,4 @@ const Settings: React.FC = () => {
 };
 
 export default Settings;
+
