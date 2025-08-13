@@ -44,13 +44,19 @@ const HPBar: React.FC = () => {
   const fallbackData = { hp: 850, total_hp: 1000 };
   const thanosData = error || !thanos ? fallbackData : thanos;
 
-  // Only show loading if we're actually loading and don't have an error yet
-  if (isLoading && !error) return <div>Loading...</div>;
-
   const { hp, total_hp } = thanosData as any;
-
   const clampedHP = Math.max(0, Math.min(hp, total_hp));
   const fillWidth = (clampedHP / total_hp) * BAR_WIDTH;
+
+  // Send HP to game when it changes
+  React.useEffect(() => {
+    if (typeof (window as any).__thanosSetHP === 'function') {
+      (window as any).__thanosSetHP(clampedHP);
+    }
+  }, [clampedHP]);
+
+  // Only show loading if we're actually loading and don't have an error yet
+  if (isLoading && !error) return <div>Loading...</div>;
 
   return (
     <motion.div
