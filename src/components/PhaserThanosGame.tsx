@@ -10,50 +10,79 @@ interface GameConfig {
   thanos: {
     scale: number;
     yPosition: number;
+    xOffset: number;
     hitEffect: {
       scaleIncrease: number;
       tintColor: number;
       duration: number;
     };
   };
-  attackers: {
+  attacker: {
     scale: number;
-    spawnYOffset: number;
-    targetYOffset: number;
+    spawnXOffset: number;
+    yPosition: number;
+    attackOffset: number;
     animation: {
       duration: number;
       ease: string;
     };
+    heavy: {
+      holdFrameIndex: number;
+      holdMs: number;
+      dashDuration: number;
+    };
+  };
+  defeatBanner: {
+    fontSize: string;
+    color: string;
+    stroke: string;
+    strokeThickness: number;
   };
 }
 
 const CONFIG: GameConfig = {
   thanos: {
-    scale: 0.55,
+    scale: 1.1,
     yPosition: 450,
+    xOffset: 300,
     hitEffect: {
       scaleIncrease: 0.08,
       tintColor: 0xff0000,
       duration: 49,
     },
   },
-  attackers: {
-    scale: 3,
-    spawnYOffset: 300,
-    targetYOffset: -200,
+  attacker: {
+    scale: 2,
+    spawnXOffset: 150,
+    yPosition: 570,
+    attackOffset: 150,
     animation: {
-      duration: 700,
+      duration: 500,
       ease: "Power1",
     },
+    heavy: {
+      holdFrameIndex: 2,   // 3rd frame
+      holdMs: 700,         // 0.7s hold before the dash
+      dashDuration: 260,   // dash speed
+    },
+  },
+  defeatBanner: {
+    fontSize: "64px",
+    color: "#ffffff",
+    stroke: "#000000",
+    strokeThickness: 8,
   },
 };
 
 class ArenaScene extends Phaser.Scene {
   private hasHitOnce: boolean = false;
   private thanos!: Phaser.GameObjects.Image;
+  private attacker!: Phaser.GameObjects.Sprite;
   private isThanosDead: boolean = false;
+  private isBusy: boolean = false; // prevents overlapping actions
   private lightAttackTimer?: Phaser.Time.TimerEvent;
   private deathSequenceStarted: boolean = false;
+  private defeatText!: Phaser.GameObjects.Text;
 
   constructor() {
     super("ArenaScene");
@@ -70,24 +99,67 @@ class ArenaScene extends Phaser.Scene {
   preload(): void {
     this.load.image("thanos", "/assets/thanos.png");
 
-    this.load.spritesheet("orc_attack", "/assets/Orc-Attack01.png", {
-      frameWidth: 100,
-      frameHeight: 100,
+    // Fighter sprites
+    this.load.spritesheet("fighter_idle", "/assets/avatars/Fighter/Idle.png", {
+      frameWidth: 128,
+      frameHeight: 128,
     });
-    this.load.spritesheet("soldier_attack", "/assets/Soldier-Attack01.png", {
-      frameWidth: 100,
-      frameHeight: 100,
+    this.load.spritesheet("fighter_walk", "/assets/avatars/Fighter/Walk.png", {
+      frameWidth: 128,
+      frameHeight: 128,
+    });
+    this.load.spritesheet("fighter_run", "/assets/avatars/Fighter/Run.png", {
+      frameWidth: 128,
+      frameHeight: 128,
+    });
+
+    // Attack sprites
+    this.load.spritesheet("fighter_attack1", "/assets/avatars/Fighter/Attack_1.png", {
+      frameWidth: 128,
+      frameHeight: 128,
+    });
+    this.load.spritesheet("fighter_attack2", "/assets/avatars/Fighter/Attack_2.png", {
+      frameWidth: 128,
+      frameHeight: 128,
+    });
+    this.load.spritesheet("fighter_attack3", "/assets/avatars/Fighter/Attack_3.png", {
+      frameWidth: 128,
+      frameHeight: 128,
     });
   }
 
   create(): void {
-    const centerX = this.cameras.main.width / 2;
+    const width = this.cameras.main.width;
+    const height = this.cameras.main.height;
 
     this.createAnimations();
 
+    // Thanos - positioned based on original game
     this.thanos = this.add
-      .image(centerX, CONFIG.thanos.yPosition, "thanos")
-      .setScale(CONFIG.thanos.scale);
+      .image(width - CONFIG.thanos.xOffset, CONFIG.thanos.yPosition, "thanos")
+      .setScale(CONFIG.thanos.scale)
+      .setDepth(2);
+
+    // Fighter - positioned based on original game
+    this.attacker = this.add
+      .sprite(CONFIG.attacker.spawnXOffset, CONFIG.attacker.yPosition)
+      .setScale(CONFIG.attacker.scale)
+      .setDepth(2);
+
+    this.attacker.play("fighter_walk_anim");
+
+    // Defeat banner (hidden initially)
+    this.defeatText = this.add
+      .text(width / 2, height / 2, "THANOS HAS BEEN DEFEATED", {
+        fontFamily: "sans-serif",
+        fontSize: CONFIG.defeatBanner.fontSize,
+        color: CONFIG.defeatBanner.color,
+        stroke: CONFIG.defeatBanner.stroke,
+        strokeThickness: CONFIG.defeatBanner.strokeThickness,
+      })
+      .setOrigin(0.5)
+      .setDepth(100)
+      .setAlpha(0);
 
     // Start appropriate battle sequence based on death state
     this.startBattleSequence();
@@ -135,124 +207,135 @@ class ArenaScene extends Phaser.Scene {
   }
 
   createAnimations(): void {
-    this.anims.create({
-      key: "orc_attack_anim",
-      frames: this.anims.generateFrameNumbers("orc_attack", {
-        start: 0,
-        end: 5,
-      }),
-      frameRate: 10,
-      repeat: -1,
-    });
-    this.anims.create({
-      key: "soldier_attack_anim",
-      frames: this.anims.generateFrameNumbers("soldier_attack", {
-        start: 0,
-        end: 5,
-      }),
-      frameRate: 10,
-      repeat: -1,
-    });
+    const loopAnim = (key: string, spriteKey: string, rate = 10) => {
+      if (this.anims.exists(key)) return;
+      this.anims.create({ 
+        key, 
+        frames: this.anims.generateFrameNumbers(spriteKey), 
+        frameRate: rate, 
+        repeat: -1 
+      });
+    };
+    const oneShotAnim = (key: string, spriteKey: string, rate = 12) => {
+      if (this.anims.exists(key)) return;
+      this.anims.create({ 
+        key, 
+        frames: this.anims.generateFrameNumbers(spriteKey), 
+        frameRate: rate, 
+        repeat: 0 
+      });
+    };
+
+    loopAnim("fighter_idle_anim", "fighter_idle", 8);
+    loopAnim("fighter_walk_anim", "fighter_walk", 10);
+    loopAnim("fighter_run_anim", "fighter_run", 20);
+
+    oneShotAnim("fighter_attack1_anim", "fighter_attack1", 14);
+    oneShotAnim("fighter_attack2_anim", "fighter_attack2", 14);
+    oneShotAnim("fighter_attack3_anim", "fighter_attack3", 14);
   }
 
   /**
    * Perform a light attack - attacker runs in, hits Thanos, and returns
    */
   private performLightAttack(): void {
-    this.spawnAttacker(false);
+    if (this.isThanosDead || this.isBusy) return;
+    this.isBusy = true;
+
+    const originalX = this.attacker.x;
+    const groundY = CONFIG.attacker.yPosition;
+    const targetX = this.thanos.x - CONFIG.attacker.attackOffset;
+
+    this.attacker.play("fighter_run_anim", true);
+    this.tweens.add({
+      targets: this.attacker,
+      x: targetX,
+      duration: CONFIG.attacker.animation.duration,
+      ease: CONFIG.attacker.animation.ease,
+      onComplete: () => {
+        this.attacker.play("fighter_attack2_anim", true);
+
+        // light hit feedback only
+        this.time.delayedCall(150, () => {
+          this.cameras.main.shake(120, 0.004);
+          this.hitThanosEffect();
+        });
+
+        this.attacker.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => {
+          this.returnToStart(originalX, groundY);
+        });
+      }
+    });
   }
 
   /**
    * Perform a heavy attack - attacker dashes in, kills Thanos, and remains
    */
   private performHeavyAttack(): void {
-    this.spawnAttacker(true);
-  }
+    if (this.isThanosDead || this.isBusy) return;
+    this.isBusy = true;
 
-  private spawnAttacker(isHeavyAttack: boolean = false): void {
-    const isOrc = Phaser.Math.Between(0, 1) === 0;
+    const originalX = this.attacker.x;
+    const groundY = CONFIG.attacker.yPosition;
+    const targetX = this.thanos.x - CONFIG.attacker.attackOffset;
 
-    const key = isOrc ? "orc_attack" : "soldier_attack";
-    const animKey = isOrc ? "orc_attack_anim" : "soldier_attack_anim";
+    // Start Attack1 and PAUSE on 3rd frame
+    this.attacker.play("fighter_attack1_anim", true);
+    const anim = this.attacker.anims.currentAnim;
+    const frames = anim ? anim.frames : [];
+    const holdIx = Math.min(CONFIG.attacker.heavy.holdFrameIndex, Math.max(0, frames.length - 1));
+    if (frames.length) {
+      this.attacker.anims.pause(frames[holdIx]);
+    } else {
+      this.attacker.anims.pause();
+    }
 
-    const attacker = this.add
-      .sprite(
-        Phaser.Math.Between(100, this.scale.width - 100),
-        this.scale.height + CONFIG.attackers.spawnYOffset,
-        key
-      )
-      .setScale(CONFIG.attackers.scale);
-    attacker.play(animKey);
+    // Hold for 0.7s, THEN dash while still frozen
+    this.time.delayedCall(CONFIG.attacker.heavy.holdMs, () => {
+      this.tweens.add({
+        targets: this.attacker,
+        x: targetX,
+        duration: CONFIG.attacker.heavy.dashDuration,
+        ease: "Quad.easeOut",
+        onComplete: () => {
+          // Resume the remainder of Attack1
+          this.attacker.anims.resume();
 
-    // Heavy attack has faster, more dramatic movement
-    const attackDuration = isHeavyAttack ? CONFIG.attackers.animation.duration * 0.6 : CONFIG.attackers.animation.duration;
-    const targetY = this.thanos.y + Phaser.Math.Between(CONFIG.attackers.targetYOffset, 0);
+          // Impact & kill shortly after resuming
+          this.time.delayedCall(120, () => {
+            this.cameras.main.shake(220, 0.006);
 
-    this.tweens.add({
-      targets: attacker,
-      x: this.thanos.x,
-      y: targetY,
-      duration: attackDuration,
-      ease: isHeavyAttack ? "Back.easeOut" : CONFIG.attackers.animation.ease,
-      onComplete: () => {
-        // Heavy attack: attacker stays, light attack: attacker returns and disappears
-        if (isHeavyAttack) {
-          this.performHeavyAttackEffect();
-          // Attacker remains on scene for heavy attack
-        } else {
-          this.performLightAttackEffect();
-          // Light attack: attacker returns to starting position
-          this.tweens.add({
-            targets: attacker,
-            x: attacker.x + Phaser.Math.Between(-200, 200),
-            y: this.scale.height + CONFIG.attackers.spawnYOffset,
-            duration: CONFIG.attackers.animation.duration,
-            ease: CONFIG.attackers.animation.ease,
-            onComplete: () => attacker.destroy(),
+            // 🔴 Show red flash before starting death sequence
+            this.thanos.setTint(0xff0000);
+
+            // Keep tint for 150ms, then clear & kill
+            this.time.delayedCall(150, () => {
+              this.thanos.clearTint();
+              this.killThanosLikeMario(); // start death animation
+            });
+          });
+
+          // After animation completes, return to start (even after death)
+          this.attacker.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => {
+            this.returnToStart(originalX, groundY);
           });
         }
-      },
+      });
     });
   }
 
-  /**
-   * Light attack effect - mild hit with recovery
-   */
-  private performLightAttackEffect(): void {
-    this.cameras.main.shake(200, 0.01);
-    this.hitThanosEffect();
-
-    if (!this.hasHitOnce) {
-      this.hasHitOnce = true;
-    }
-  }
-
-  /**
-   * Heavy attack effect - dramatic death sequence
-   */
-  private performHeavyAttackEffect(): void {
-    // More intense camera shake for death
-    this.cameras.main.shake(800, 0.03);
-    
-    // Dramatic hit effect with different color and longer duration
-    this.thanos.setTint(0x8B0000); // Dark red tint for death
-    
+  private returnToStart(originalX: number, groundY: number): void {
     this.tweens.add({
-      targets: this.thanos,
-      scale: this.thanos.scale + CONFIG.thanos.hitEffect.scaleIncrease * 2,
-      rotation: Phaser.Math.DegToRad(15), // Slight rotation for dramatic effect
-      duration: CONFIG.thanos.hitEffect.duration * 3,
-      yoyo: false, // No recovery for death
-      ease: "Power2.easeOut",
+      targets: this.attacker,
+      x: originalX,
+      y: groundY,
+      duration: CONFIG.attacker.animation.duration,
+      ease: CONFIG.attacker.animation.ease,
+      onStart: () => this.attacker.play("fighter_run_anim", true),
       onComplete: () => {
-        // Fade out effect for death
-        this.tweens.add({
-          targets: this.thanos,
-          alpha: 0.3,
-          duration: 1000,
-          ease: "Power2.easeOut",
-        });
-      },
+        this.attacker.play("fighter_walk_anim", true);
+        this.isBusy = false;
+      }
     });
   }
 
@@ -265,7 +348,65 @@ class ArenaScene extends Phaser.Scene {
       duration: CONFIG.thanos.hitEffect.duration,
       yoyo: true,
       ease: "Quad.easeInOut",
-      onComplete: () => this.thanos.clearTint(),
+      onComplete: () => { 
+        if (!this.isThanosDead) this.thanos.clearTint(); 
+      }
+    });
+  }
+
+  private killThanosLikeMario(): void {
+    if (this.isThanosDead) return;
+    this.isThanosDead = true;
+    this.thanos.clearTint();
+
+    const upDistance = 180;
+    const dropY = this.cameras.main.height + 200;
+
+    // Pop up, then fall
+    this.tweens.add({
+      targets: this.thanos,
+      y: this.thanos.y - upDistance,
+      duration: 350,
+      ease: "Quad.easeOut",
+      onComplete: () => {
+        // 🔁 Blink while falling
+        let blinkCount = 0;
+        const blinkTimer = this.time.addEvent({
+          delay: 100,
+          loop: true,
+          callback: () => {
+            this.thanos.visible = !this.thanos.visible;
+            blinkCount++;
+            if (blinkCount > 10) { // stop after ~1s
+              this.thanos.visible = true;
+              blinkTimer.remove();
+            }
+          }
+        });
+
+        // Fall down
+        this.tweens.add({
+          targets: this.thanos,
+          y: dropY,
+          alpha: 0,
+          duration: 900,
+          ease: "Quad.easeIn",
+          onComplete: () => {
+            this.thanos.destroy();
+            this.showDefeatBanner();
+          }
+        });
+      }
+    });
+  }
+
+  private showDefeatBanner(): void {
+    this.defeatText.setAlpha(0).setVisible(true);
+    this.tweens.add({ 
+      targets: this.defeatText, 
+      alpha: 1, 
+      duration: 600, 
+      ease: "Quad.easeOut" 
     });
   }
 
@@ -273,8 +414,19 @@ class ArenaScene extends Phaser.Scene {
     const { width, height } = gameSize;
     this.cameras.resize(width, height);
 
-    if (this.thanos) {
-      this.thanos.setPosition(width / 2, CONFIG.thanos.yPosition);
+    if (this.thanos && !this.isThanosDead) {
+      this.thanos.setPosition(width - CONFIG.thanos.xOffset, CONFIG.thanos.yPosition);
+    }
+
+    if (this.attacker) {
+      this.attacker.setPosition(
+        Math.min(this.attacker.x, width - 20),
+        CONFIG.attacker.yPosition
+      );
+    }
+
+    if (this.defeatText) {
+      this.defeatText.setPosition(width / 2, height / 2);
     }
   }
 }
