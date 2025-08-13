@@ -77,6 +77,7 @@ const CONFIG: GameConfig = {
 };
 
 class ArenaScene extends Phaser.Scene {
+  private layoutReady = false;
   private thanos!: Phaser.GameObjects.Image;
   private attacker!: Phaser.GameObjects.Sprite;
   private isThanosDead: boolean = false;
@@ -175,7 +176,11 @@ class ArenaScene extends Phaser.Scene {
     return this.cameras.main.height - 200;
   }
 
-  private targetXInFrontOfThanos(gap = -100): number {
+  private targetXInFrontOfThanos(gap = 30): number {
+    // sensible default
+    if (!this.layoutReady) {
+      return Math.round(this.cameras.main.width * 0.66); // safe fallback
+    }
     const tex = this.textures
       .get("thanos")
       .getSourceImage() as HTMLImageElement;
@@ -184,8 +189,7 @@ class ArenaScene extends Phaser.Scene {
     const thanosLeftVisual = this.thanos.getBounds().left + inset;
     const halfAttacker = this.attacker.displayWidth * this.attacker.originX; // 0.5 by default
     // base stop: attacker's RIGHT edge is `gap` before visual left edge
-    const base = thanosLeftVisual - gap - halfAttacker;
-    // bump the fighter a bit further TOWARD Thanos (positive values move right)
+    const base = thanosLeftVisual - gap - halfAttacker; // bump the fighter a bit further TOWARD Thanos (positive values move right)
     const bumpTowardThanosPx = 12; // tweak: try 8–18 until it looks perfect
     return Math.round(base + bumpTowardThanosPx);
   }
@@ -200,6 +204,9 @@ class ArenaScene extends Phaser.Scene {
     // Thanos - positioned based on original game
     this.thanos = this.add.image(0, 0, "thanos").setDepth(5);
     this.fitThanosToCamera();
+    this.time.delayedCall(0, () => {
+      this.layoutReady = true;
+    });
     // Fighter - positioned based on original game
     this.attacker = this.add
       .sprite(CONFIG.attacker.spawnXOffset, this.getGroundY())
@@ -336,10 +343,12 @@ class ArenaScene extends Phaser.Scene {
 
     const originalX = this.attacker.x;
     const groundY = CONFIG.attacker.yPosition;
-    const targetX = this.targetXInFrontOfThanos();
 
     // Start Attack1 and PAUSE on 3rd frame
     this.attacker.play("fighter_attack1_anim", true);
+
+    this.tweens.killTweensOf(this.attacker); // ensure no leftover tween
+    const targetX = this.targetXInFrontOfThanos();
     const anim = this.attacker.anims.currentAnim;
     const frames = anim ? anim.frames : [];
     const holdIx = Math.min(
@@ -497,8 +506,6 @@ class ArenaScene extends Phaser.Scene {
     if (this.defeatText) {
       this.defeatText.setPosition(width / 2, height / 2);
     }
-
-    this.fitThanosToCamera();
   }
 }
 
@@ -509,6 +516,7 @@ const PhaserThanosGame: React.FC<ThanosGameProps> = ({ isThanosDead }) => {
 
   useEffect(() => {
     if (!gameRef.current) return;
+    if (phaserGameRef.current) return;
 
     const config: Phaser.Types.Core.GameConfig = {
       type: Phaser.AUTO,
