@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { Target, TrendingUp, Calendar, Trophy, LucideIcon } from "lucide-react";
 import Sidebar from "../components/Sidebar";
@@ -33,7 +33,10 @@ interface ProgressDataItem {
 
 const BAR_WIDTH = 600; // Wider visual bar for clarity
 
-const HPBar: React.FC = () => {
+/**
+ * Custom hook to manage Thanos HP data and death state
+ */
+const useThanosHP = () => {
   const {
     data: thanos,
     isLoading,
@@ -42,14 +45,30 @@ const HPBar: React.FC = () => {
 
   // Fallback data for when backend is unavailable
   const fallbackData = { hp: 850, total_hp: 1000 };
-  const thanosData = error || !thanos ? fallbackData : thanos;
-
-  // Only show loading if we're actually loading and don't have an error yet
-  if (isLoading && !error) return <div>Loading...</div>;
+  
+  // Always use fallback data if we don't have valid backend data
+  const thanosData = (thanos && typeof thanos === 'object' && thanos.hp !== undefined) ? thanos : fallbackData;
 
   const { hp, total_hp } = thanosData as any;
+  const clampedHP = Math.max(0, Math.min(hp || 0, total_hp || 1000));
+  const isThanosDead = clampedHP === 0;
 
-  const clampedHP = Math.max(0, Math.min(hp, total_hp));
+  return {
+    hp: hp || 850,
+    total_hp: total_hp || 1000,
+    clampedHP,
+    isThanosDead,
+    isLoading: isLoading && !error && !thanos,
+    error,
+  };
+};
+
+const HPBar: React.FC = () => {
+  const { hp, total_hp, clampedHP, isLoading } = useThanosHP();
+
+  // Only show loading if we're actually loading and don't have an error yet
+  if (isLoading) return <div>Loading...</div>;
+
   const fillWidth = (clampedHP / total_hp) * BAR_WIDTH;
 
   return (
@@ -306,6 +325,9 @@ const Dashboard: React.FC = () => {
     error,
   } = useBackendQuery("progress", "/tasks-info");
 
+  // Get Thanos death state for battle management
+  const { isThanosDead } = useThanosHP();
+
   // Fallback data for when backend is unavailable
   const fallbackProgressData = {
     todays_tasks: "5",
@@ -411,7 +433,7 @@ const Dashboard: React.FC = () => {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 1, type: "spring", bounce: 0.3 }}
           >
-            <PhaserThanosGame />
+            <PhaserThanosGame isThanosDead={isThanosDead} />
           </motion.div>
 
           {/* Scroll indicator */}
