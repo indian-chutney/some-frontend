@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import Phaser from "phaser";
-import { Card, CardContent } from "./ui/card";
+import { Card } from "./ui/card";
 
 interface ThanosGameProps {
   isThanosDead: boolean;
@@ -11,6 +11,7 @@ interface GameConfig {
     scale: number;
     yPosition: number;
     xOffset: number;
+    leftInsetPx: 120;
     hitEffect: {
       scaleIncrease: number;
       tintColor: number;
@@ -45,6 +46,7 @@ const CONFIG: GameConfig = {
     scale: 1.1,
     yPosition: 450,
     xOffset: 300,
+    leftInsetPx: 120,
     hitEffect: {
       scaleIncrease: 0.08,
       tintColor: 0xff0000,
@@ -61,9 +63,9 @@ const CONFIG: GameConfig = {
       ease: "Power1",
     },
     heavy: {
-      holdFrameIndex: 2,   // 3rd frame
-      holdMs: 700,         // 0.7s hold before the dash
-      dashDuration: 260,   // dash speed
+      holdFrameIndex: 2, // 3rd frame
+      holdMs: 700, // 0.7s hold before the dash
+      dashDuration: 260, // dash speed
     },
   },
   defeatBanner: {
@@ -75,7 +77,6 @@ const CONFIG: GameConfig = {
 };
 
 class ArenaScene extends Phaser.Scene {
-  private hasHitOnce: boolean = false;
   private thanos!: Phaser.GameObjects.Image;
   private attacker!: Phaser.GameObjects.Sprite;
   private isThanosDead: boolean = false;
@@ -83,6 +84,7 @@ class ArenaScene extends Phaser.Scene {
   private lightAttackTimer?: Phaser.Time.TimerEvent;
   private deathSequenceStarted: boolean = false;
   private defeatText!: Phaser.GameObjects.Text;
+  private bg!: Phaser.GameObjects.Image;
 
   constructor() {
     super("ArenaScene");
@@ -114,38 +116,95 @@ class ArenaScene extends Phaser.Scene {
     });
 
     // Attack sprites
-    this.load.spritesheet("fighter_attack1", "/assets/avatars/Fighter/Attack_1.png", {
-      frameWidth: 128,
-      frameHeight: 128,
-    });
-    this.load.spritesheet("fighter_attack2", "/assets/avatars/Fighter/Attack_2.png", {
-      frameWidth: 128,
-      frameHeight: 128,
-    });
-    this.load.spritesheet("fighter_attack3", "/assets/avatars/Fighter/Attack_3.png", {
-      frameWidth: 128,
-      frameHeight: 128,
-    });
+    this.load.spritesheet(
+      "fighter_attack1",
+      "/assets/avatars/Fighter/Attack_1.png",
+      {
+        frameWidth: 128,
+        frameHeight: 128,
+      }
+    );
+    this.load.spritesheet(
+      "fighter_attack2",
+      "/assets/avatars/Fighter/Attack_2.png",
+      {
+        frameWidth: 128,
+        frameHeight: 128,
+      }
+    );
+    this.load.spritesheet(
+      "fighter_attack3",
+      "/assets/avatars/Fighter/Attack_3.png",
+      {
+        frameWidth: 128,
+        frameHeight: 128,
+      }
+    );
+
+    this.load.image("bg", "/assets/background.png");
   }
 
+  private fitThanosToCamera(): void {
+    if (!this.thanos) return;
+    const cam = this.cameras.main;
+
+    const padX = 0; // horizontal margin
+    const padY = 55; // vertical lift — increase to move Thanos up
+
+    // natural image size
+    const tex = this.textures
+      .get("thanos")
+      .getSourceImage() as HTMLImageElement;
+    const natW = tex.width;
+    const natH = tex.height;
+
+    // max space he can occupy
+    const maxW = cam.width - padX * 2;
+    const maxH = cam.height - padY * 2;
+
+    // base scale from CONFIG, but clamp so he stays fully visible
+    const clampScale = Math.min(CONFIG.thanos.scale, maxW / natW, maxH / natH);
+    this.thanos.setScale(clampScale);
+
+    // stick to bottom-right, with independent padding
+    this.thanos.setOrigin(1, 1);
+    this.thanos.setPosition(cam.width - padX, cam.height - padY);
+  }
+  private getGroundY(): number {
+    // tune this single number to match the background's stone top line
+    return this.cameras.main.height - 200;
+  }
+
+  private targetXInFrontOfThanos(gap = -100): number {
+    const tex = this.textures
+      .get("thanos")
+      .getSourceImage() as HTMLImageElement;
+    const scaleX = this.thanos.displayWidth / tex.width; // accounts for fitThanosToCamera()
+    const inset = (CONFIG.thanos as any).leftInsetPx * scaleX; // scale the visual inset
+    const thanosLeftVisual = this.thanos.getBounds().left + inset;
+    const halfAttacker = this.attacker.displayWidth * this.attacker.originX; // 0.5 by default
+    // base stop: attacker's RIGHT edge is `gap` before visual left edge
+    const base = thanosLeftVisual - gap - halfAttacker;
+    // bump the fighter a bit further TOWARD Thanos (positive values move right)
+    const bumpTowardThanosPx = 12; // tweak: try 8–18 until it looks perfect
+    return Math.round(base + bumpTowardThanosPx);
+  }
   create(): void {
-    const width = this.cameras.main.width;
-    const height = this.cameras.main.height;
+    const { width, height } = this.cameras.main;
+    this.bg = this.add.image(0, 0, "bg").setOrigin(0, 0).setDepth(0);
+    this.bg.setDisplaySize(width, height); // fill canvas
+    this.bg.setScrollFactor(0);
 
     this.createAnimations();
 
     // Thanos - positioned based on original game
-    this.thanos = this.add
-      .image(width - CONFIG.thanos.xOffset, CONFIG.thanos.yPosition, "thanos")
-      .setScale(CONFIG.thanos.scale)
-      .setDepth(2);
-
+    this.thanos = this.add.image(0, 0, "thanos").setDepth(5);
+    this.fitThanosToCamera();
     // Fighter - positioned based on original game
     this.attacker = this.add
-      .sprite(CONFIG.attacker.spawnXOffset, CONFIG.attacker.yPosition)
+      .sprite(CONFIG.attacker.spawnXOffset, this.getGroundY())
       .setScale(CONFIG.attacker.scale)
-      .setDepth(2);
-
+      .setDepth(6); // always above thanos
     this.attacker.play("fighter_walk_anim");
 
     // Defeat banner (hidden initially)
@@ -194,7 +253,7 @@ class ArenaScene extends Phaser.Scene {
   updateDeathState(isThanosDead: boolean): void {
     if (this.isThanosDead !== isThanosDead) {
       this.isThanosDead = isThanosDead;
-      
+
       if (isThanosDead && !this.deathSequenceStarted) {
         // Stop light attacks and start death sequence
         if (this.lightAttackTimer) {
@@ -209,20 +268,20 @@ class ArenaScene extends Phaser.Scene {
   createAnimations(): void {
     const loopAnim = (key: string, spriteKey: string, rate = 10) => {
       if (this.anims.exists(key)) return;
-      this.anims.create({ 
-        key, 
-        frames: this.anims.generateFrameNumbers(spriteKey), 
-        frameRate: rate, 
-        repeat: -1 
+      this.anims.create({
+        key,
+        frames: this.anims.generateFrameNumbers(spriteKey),
+        frameRate: rate,
+        repeat: -1,
       });
     };
     const oneShotAnim = (key: string, spriteKey: string, rate = 12) => {
       if (this.anims.exists(key)) return;
-      this.anims.create({ 
-        key, 
-        frames: this.anims.generateFrameNumbers(spriteKey), 
-        frameRate: rate, 
-        repeat: 0 
+      this.anims.create({
+        key,
+        frames: this.anims.generateFrameNumbers(spriteKey),
+        frameRate: rate,
+        repeat: 0,
       });
     };
 
@@ -244,8 +303,8 @@ class ArenaScene extends Phaser.Scene {
 
     const originalX = this.attacker.x;
     const groundY = CONFIG.attacker.yPosition;
-    const targetX = this.thanos.x - CONFIG.attacker.attackOffset;
-
+    const targetX = this.targetXInFrontOfThanos(); // try 30; change to taste
+    this.tweens.killTweensOf(this.attacker);
     this.attacker.play("fighter_run_anim", true);
     this.tweens.add({
       targets: this.attacker,
@@ -264,7 +323,7 @@ class ArenaScene extends Phaser.Scene {
         this.attacker.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => {
           this.returnToStart(originalX, groundY);
         });
-      }
+      },
     });
   }
 
@@ -277,13 +336,16 @@ class ArenaScene extends Phaser.Scene {
 
     const originalX = this.attacker.x;
     const groundY = CONFIG.attacker.yPosition;
-    const targetX = this.thanos.x - CONFIG.attacker.attackOffset;
+    const targetX = this.targetXInFrontOfThanos();
 
     // Start Attack1 and PAUSE on 3rd frame
     this.attacker.play("fighter_attack1_anim", true);
     const anim = this.attacker.anims.currentAnim;
     const frames = anim ? anim.frames : [];
-    const holdIx = Math.min(CONFIG.attacker.heavy.holdFrameIndex, Math.max(0, frames.length - 1));
+    const holdIx = Math.min(
+      CONFIG.attacker.heavy.holdFrameIndex,
+      Math.max(0, frames.length - 1)
+    );
     if (frames.length) {
       this.attacker.anims.pause(frames[holdIx]);
     } else {
@@ -316,10 +378,13 @@ class ArenaScene extends Phaser.Scene {
           });
 
           // After animation completes, return to start (even after death)
-          this.attacker.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => {
-            this.returnToStart(originalX, groundY);
-          });
-        }
+          this.attacker.once(
+            Phaser.Animations.Events.ANIMATION_COMPLETE,
+            () => {
+              this.returnToStart(originalX, groundY);
+            }
+          );
+        },
       });
     });
   }
@@ -328,14 +393,14 @@ class ArenaScene extends Phaser.Scene {
     this.tweens.add({
       targets: this.attacker,
       x: originalX,
-      y: groundY,
+      y: this.getGroundY(),
       duration: CONFIG.attacker.animation.duration,
       ease: CONFIG.attacker.animation.ease,
       onStart: () => this.attacker.play("fighter_run_anim", true),
       onComplete: () => {
         this.attacker.play("fighter_walk_anim", true);
         this.isBusy = false;
-      }
+      },
     });
   }
 
@@ -348,9 +413,9 @@ class ArenaScene extends Phaser.Scene {
       duration: CONFIG.thanos.hitEffect.duration,
       yoyo: true,
       ease: "Quad.easeInOut",
-      onComplete: () => { 
-        if (!this.isThanosDead) this.thanos.clearTint(); 
-      }
+      onComplete: () => {
+        if (!this.isThanosDead) this.thanos.clearTint();
+      },
     });
   }
 
@@ -377,11 +442,12 @@ class ArenaScene extends Phaser.Scene {
           callback: () => {
             this.thanos.visible = !this.thanos.visible;
             blinkCount++;
-            if (blinkCount > 10) { // stop after ~1s
+            if (blinkCount > 10) {
+              // stop after ~1s
               this.thanos.visible = true;
               blinkTimer.remove();
             }
-          }
+          },
         });
 
         // Fall down
@@ -394,19 +460,19 @@ class ArenaScene extends Phaser.Scene {
           onComplete: () => {
             this.thanos.destroy();
             this.showDefeatBanner();
-          }
+          },
         });
-      }
+      },
     });
   }
 
   private showDefeatBanner(): void {
     this.defeatText.setAlpha(0).setVisible(true);
-    this.tweens.add({ 
-      targets: this.defeatText, 
-      alpha: 1, 
-      duration: 600, 
-      ease: "Quad.easeOut" 
+    this.tweens.add({
+      targets: this.defeatText,
+      alpha: 1,
+      duration: 600,
+      ease: "Quad.easeOut",
     });
   }
 
@@ -414,20 +480,25 @@ class ArenaScene extends Phaser.Scene {
     const { width, height } = gameSize;
     this.cameras.resize(width, height);
 
-    if (this.thanos && !this.isThanosDead) {
-      this.thanos.setPosition(width - CONFIG.thanos.xOffset, CONFIG.thanos.yPosition);
+    if (this.bg) {
+      this.bg.setDisplaySize(width, height);
     }
+
+    // fit keeps Thanos fully visible at bottom-right
+    this.fitThanosToCamera();
 
     if (this.attacker) {
       this.attacker.setPosition(
         Math.min(this.attacker.x, width - 20),
-        CONFIG.attacker.yPosition
+        this.getGroundY()
       );
     }
 
     if (this.defeatText) {
       this.defeatText.setPosition(width / 2, height / 2);
     }
+
+    this.fitThanosToCamera();
   }
 }
 
@@ -459,10 +530,12 @@ const PhaserThanosGame: React.FC<ThanosGameProps> = ({ isThanosDead }) => {
     };
 
     phaserGameRef.current = new Phaser.Game(config);
-    
+
     // Store reference to the scene for later updates
-    phaserGameRef.current.scene.start('ArenaScene', { isThanosDead });
-    sceneRef.current = phaserGameRef.current.scene.getScene('ArenaScene') as ArenaScene;
+    phaserGameRef.current.scene.start("ArenaScene", { isThanosDead });
+    sceneRef.current = phaserGameRef.current.scene.getScene(
+      "ArenaScene"
+    ) as ArenaScene;
 
     return () => {
       if (phaserGameRef.current) {
@@ -481,25 +554,26 @@ const PhaserThanosGame: React.FC<ThanosGameProps> = ({ isThanosDead }) => {
   }, [isThanosDead]);
 
   return (
-    <Card style={{ 
-      padding: "0", 
-      overflow: "hidden",
-      border: "2px solid rgba(99, 102, 241, 0.2)",
-      boxShadow: "0 10px 30px rgba(99, 102, 241, 0.1)",
-      background: "linear-gradient(135deg, rgba(26, 26, 26, 0.9) 0%, rgba(42, 42, 42, 0.9) 100%)"
-    }}>
+    <Card
+      style={{
+        padding: "0",
+        overflow: "visible",
+        border: "2px solid rgba(99, 102, 241, 0.2)",
+        boxShadow: "0 10px 30px rgba(99, 102, 241, 0.1)",
+        background:
+          "linear-gradient(135deg, rgba(26, 26, 26, 0.9) 0%, rgba(42, 42, 42, 0.9) 100%)",
+      }}
+    >
       <div
         ref={gameRef}
         id="phaser-thanos-container"
         style={{
           width: "100%",
-          height: "60vh",
-          minHeight: "400px",
-          maxHeight: "700px",
+          height: "90vh",
           borderRadius: "14px",
           overflow: "hidden",
           background: "transparent",
-          position: "relative"
+          position: "relative",
         }}
       />
     </Card>

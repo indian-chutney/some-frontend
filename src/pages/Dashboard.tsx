@@ -45,9 +45,12 @@ const useThanosHP = () => {
 
   // Fallback data for when backend is unavailable
   const fallbackData = { hp: 850, total_hp: 1000 };
-  
+
   // Always use fallback data if we don't have valid backend data
-  const thanosData = (thanos && typeof thanos === 'object' && thanos.hp !== undefined) ? thanos : fallbackData;
+  const thanosData =
+    thanos && typeof thanos === "object" && thanos.hp !== undefined
+      ? thanos
+      : fallbackData;
 
   const { hp, total_hp } = thanosData as any;
   const clampedHP = Math.max(0, Math.min(hp || 0, total_hp || 1000));
