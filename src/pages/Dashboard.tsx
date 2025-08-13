@@ -31,7 +31,7 @@ interface ProgressDataItem {
   color: string;
 }
 
-const BAR_WIDTH = 600; // Wider visual bar for clarity
+const BAR_WIDTH = Math.min(600, window.innerWidth * 0.8); // Responsive width with max of 600px
 
 /**
  * Custom hook to manage Thanos HP data and death state
@@ -77,8 +77,13 @@ const HPBar: React.FC = () => {
   return (
     <motion.div
       style={{
-        marginTop: spacing.xl,
         textAlign: "center",
+        backgroundColor: "rgba(0, 0, 0, 0.8)", // Semi-transparent background for better visibility
+        borderRadius: "12px",
+        padding: `${spacing.md} ${spacing.lg}`,
+        backdropFilter: "blur(10px)", // Add blur effect for modern look
+        border: "1px solid rgba(255, 255, 255, 0.1)", // Subtle border
+        boxShadow: "0 8px 32px rgba(0, 0, 0, 0.3)", // Soft shadow for depth
       }}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -429,14 +434,30 @@ const Dashboard: React.FC = () => {
             }}
           />
 
-          <HPBar />
           <motion.div
-            style={{ backgroundColor: "transparent", padding: "20px" }}
+            style={{ 
+              backgroundColor: "transparent", 
+              padding: "20px",
+              position: "relative" // Enable relative positioning for absolute children
+            }}
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 1, type: "spring", bounce: 0.3 }}
           >
             <PhaserThanosGame isThanosDead={isThanosDead} />
+            {/* HP Bar overlaid on top of the game */}
+            <div
+              style={{
+                position: "absolute",
+                top: "40px", // Position from top of game container
+                left: "50%",
+                transform: "translateX(-50%)", // Center horizontally
+                zIndex: 1000, // Ensure it appears above the game
+                pointerEvents: "none" // Allow game interactions to pass through
+              }}
+            >
+              <HPBar />
+            </div>
           </motion.div>
 
           {/* Scroll indicator */}
