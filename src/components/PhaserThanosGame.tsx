@@ -576,8 +576,8 @@ const PhaserThanosGame: React.FC<ThanosGameProps> = ({ isThanosDead }) => {
         ref={gameRef}
         id="phaser-thanos-container"
         style={{
-          width: "100%",
-          height: "90vh",
+          width: window.innerWidth >= 1024 ? "calc(100vw - 280px)" : "100vw",
+          height: "100vh",
           borderRadius: "14px",
           overflow: "hidden",
           background: "transparent",
