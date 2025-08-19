@@ -11,7 +11,9 @@ import Login from "./pages/Login";
 import AvatarSelection from "./pages/AvatarSelection";
 import Dashboard from "./pages/Dashboard";
 import Settings from "./pages/Settings";
-import { Leaderboard, Spaces } from "./pages/UnderConstruction";
+import Leaderboard from "./pages/Leaderboard";
+import Spaces from "./pages/Spaces";
+import Marketplace from "./pages/Marketplace";
 import "./App.css";
 import { AuthContextProvider } from "./contexts/contexts";
 import { useAuthContext } from "./hooks/hooks";
@@ -94,6 +96,14 @@ const PageRoutes = () => {
               element={
                 <PageTransition>
                   <Spaces />
+                </PageTransition>
+              }
+            />
+            <Route
+              path="/marketplace"
+              element={
+                <PageTransition>
+                  <Marketplace />
                 </PageTransition>
               }
             />

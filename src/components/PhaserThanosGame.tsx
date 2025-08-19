@@ -199,6 +199,27 @@ class ArenaScene extends Phaser.Scene {
     this.bg.setDisplaySize(width, height); // fill canvas
     this.bg.setScrollFactor(0);
 
+    // Add subtle background movement animation
+    this.tweens.add({
+      targets: this.bg,
+      x: -10, // Move slightly left
+      duration: 8000,
+      ease: 'Sine.easeInOut',
+      yoyo: true,
+      repeat: -1, // Infinite loop
+    });
+
+    // Add a subtle scale breathing effect
+    this.tweens.add({
+      targets: this.bg,
+      scaleX: 1.02,
+      scaleY: 1.02,
+      duration: 12000,
+      ease: 'Sine.easeInOut',
+      yoyo: true,
+      repeat: -1, // Infinite loop
+    });
+
     this.createAnimations();
 
     // Thanos - positioned based on original game
