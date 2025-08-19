@@ -7,6 +7,7 @@ import {
   Settings, 
   Trophy, 
   Grid3X3,
+  ShoppingCart,
   Menu,
   X,
   LucideIcon
@@ -34,6 +35,7 @@ const Sidebar: React.FC = () => {
     { id: 'avatar', label: 'Avatar', icon: User, path: '/avatar' },
     { id: 'leaderboard', label: 'Leaderboard', icon: Trophy, path: '/leaderboard' },
     { id: 'spaces', label: 'Spaces', icon: Grid3X3, path: '/spaces' },
+    { id: 'marketplace', label: 'Marketplace', icon: ShoppingCart, path: '/marketplace' },
     { id: 'settings', label: 'Settings', icon: Settings, path: '/settings' },
   ];
 
