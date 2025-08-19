@@ -3,6 +3,7 @@ import { motion, useScroll, useTransform } from "framer-motion";
 import { Target, TrendingUp, Calendar, Trophy, LucideIcon } from "lucide-react";
 import Sidebar from "../components/Sidebar";
 import PhaserThanosGame from "../components/PhaserThanosGame";
+import StreakBadges from "../components/StreakBadges";
 import { Card, CardContent } from "../components/ui/card";
 import { colors, fonts, spacing } from "../utils/theme";
 import { useBackendQuery } from "../hooks/hooks";
@@ -582,6 +583,9 @@ const Dashboard: React.FC = () => {
               Track your journey towards perfect balance
             </p>
           </motion.div>
+
+          {/* Streak Badges */}
+          <StreakBadges />
 
           {/* Progress Grid - Responsive and Centered */}
           <div

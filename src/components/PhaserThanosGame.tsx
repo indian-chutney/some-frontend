@@ -86,6 +86,7 @@ class ArenaScene extends Phaser.Scene {
   private deathSequenceStarted: boolean = false;
   private defeatText!: Phaser.GameObjects.Text;
   private bg!: Phaser.GameObjects.Image;
+  private bg2!: Phaser.GameObjects.Image;
 
   constructor() {
     super("ArenaScene");
@@ -195,29 +196,37 @@ class ArenaScene extends Phaser.Scene {
   }
   create(): void {
     const { width, height } = this.cameras.main;
+    
+    // Create two background images for infinite scrolling
     this.bg = this.add.image(0, 0, "bg").setOrigin(0, 0).setDepth(0);
-    this.bg.setDisplaySize(width, height); // fill canvas
+    this.bg.setDisplaySize(width, height);
     this.bg.setScrollFactor(0);
+    
+    this.bg2 = this.add.image(width, 0, "bg").setOrigin(0, 0).setDepth(0);
+    this.bg2.setDisplaySize(width, height);
+    this.bg2.setScrollFactor(0);
 
-    // Add subtle background movement animation
+    // Create infinite leftward scrolling animation
     this.tweens.add({
       targets: this.bg,
-      x: -10, // Move slightly left
-      duration: 8000,
-      ease: 'Sine.easeInOut',
-      yoyo: true,
-      repeat: -1, // Infinite loop
+      x: -width,
+      duration: 15000,
+      ease: 'none',
+      repeat: -1,
+      onRepeat: () => {
+        this.bg.x = width;
+      }
     });
-
-    // Add a subtle scale breathing effect
+    
     this.tweens.add({
-      targets: this.bg,
-      scaleX: 1.02,
-      scaleY: 1.02,
-      duration: 12000,
-      ease: 'Sine.easeInOut',
-      yoyo: true,
-      repeat: -1, // Infinite loop
+      targets: this.bg2,
+      x: -width,
+      duration: 15000,
+      ease: 'none',
+      repeat: -1,
+      onRepeat: () => {
+        this.bg2.x = width;
+      }
     });
 
     this.createAnimations();
@@ -512,6 +521,10 @@ class ArenaScene extends Phaser.Scene {
 
     if (this.bg) {
       this.bg.setDisplaySize(width, height);
+    }
+    
+    if (this.bg2) {
+      this.bg2.setDisplaySize(width, height);
     }
 
     // fit keeps Thanos fully visible at bottom-right

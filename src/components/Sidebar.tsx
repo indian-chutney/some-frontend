@@ -153,6 +153,80 @@ const Sidebar: React.FC = () => {
           })}
         </nav>
 
+        {/* XP & Coins Display */}
+        <div style={{
+          padding: spacing.lg,
+          backgroundColor: colors.surfaceLight,
+          borderRadius: '12px',
+          marginBottom: spacing.lg,
+          border: `1px solid ${colors.primary}20`,
+        }}>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: spacing.sm,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: spacing.sm }}>
+              <div style={{
+                width: '8px',
+                height: '8px',
+                backgroundColor: colors.primary,
+                borderRadius: '50%',
+                boxShadow: `0 0 8px ${colors.primary}`,
+              }} />
+              <span style={{
+                color: colors.textPrimary,
+                fontSize: '0.9rem',
+                fontWeight: '600',
+                fontFamily: fonts.body,
+              }}>
+                XP
+              </span>
+            </div>
+            <span style={{
+              color: colors.primary,
+              fontSize: '1.1rem',
+              fontWeight: '700',
+              fontFamily: fonts.body,
+            }}>
+              {Math.floor(Math.random() * 5000) + 2500}
+            </span>
+          </div>
+          
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: spacing.sm }}>
+              <div style={{
+                width: '8px',
+                height: '8px',
+                backgroundColor: colors.secondary,
+                borderRadius: '50%',
+                boxShadow: `0 0 8px ${colors.secondary}`,
+              }} />
+              <span style={{
+                color: colors.textPrimary,
+                fontSize: '0.9rem',
+                fontWeight: '600',
+                fontFamily: fonts.body,
+              }}>
+                Coins
+              </span>
+            </div>
+            <span style={{
+              color: colors.secondary,
+              fontSize: '1.1rem',
+              fontWeight: '700',
+              fontFamily: fonts.body,
+            }}>
+              {Math.floor(Math.random() * 1500) + 750}
+            </span>
+          </div>
+        </div>
+
         {/* Footer */}
         <div style={{ 
           paddingTop: spacing.lg, 
