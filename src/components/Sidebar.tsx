@@ -10,10 +10,16 @@ import {
   ShoppingCart,
   Menu,
   X,
-  LucideIcon
+  LucideIcon,
+  Users,
+  Calendar,
+  Monitor,
+  UserCheck,
+  Shield
 } from 'lucide-react';
 import Logo from './Logo';
 import { colors, fonts, spacing } from '../utils/theme';
+import { getUserType, isClient, isMentor, isAdmin } from '../utils/roleUtils';
 
 interface NavigationItem {
   id: string;
@@ -27,17 +33,54 @@ const Sidebar: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const userType = getUserType();
 
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
 
-  const navigationItems: NavigationItem[] = [
-    { id: 'home', label: 'Dashboard', icon: Home, path: '/dashboard' },
-    { id: 'avatar', label: 'Avatar', icon: User, path: '/avatar' },
-    { id: 'leaderboard', label: 'Leaderboard', icon: Trophy, path: '/leaderboard' },
-    { id: 'spaces', label: 'Spaces', icon: Grid3X3, path: '/spaces' },
-    { id: 'marketplace', label: 'Marketplace', icon: ShoppingCart, path: '/marketplace' },
-    { id: 'settings', label: 'Settings', icon: Settings, path: '/settings' },
-  ];
+  // Role-based navigation items
+  const getNavigationItems = (): NavigationItem[] => {
+    const baseItems = [
+      { id: 'home', label: 'Dashboard', icon: Home, path: '/dashboard' },
+    ];
+
+    if (isClient()) {
+      return [
+        ...baseItems,
+        { id: 'mentors', label: 'Find Mentors', icon: Users, path: '/mentors' },
+        { id: 'bookings', label: 'My Bookings', icon: Calendar, path: '/bookings' },
+        { id: 'settings', label: 'Settings', icon: Settings, path: '/settings' },
+      ];
+    }
+
+    if (isMentor()) {
+      return [
+        ...baseItems,
+        { id: 'bookings', label: 'My Sessions', icon: Calendar, path: '/bookings' },
+        { id: 'profile', label: 'Profile', icon: UserCheck, path: '/profile' },
+        { id: 'settings', label: 'Settings', icon: Settings, path: '/settings' },
+      ];
+    }
+
+    if (isAdmin()) {
+      return [
+        { id: 'home', label: 'Dashboard', icon: Home, path: '/admin/dashboard' },
+        { id: 'monitor', label: 'Monitor', icon: Monitor, path: '/admin/monitor' },
+        { id: 'settings', label: 'Settings', icon: Settings, path: '/admin/settings' },
+      ];
+    }
+
+    // Fallback to legacy navigation for backward compatibility
+    return [
+      ...baseItems,
+      { id: 'avatar', label: 'Avatar', icon: User, path: '/avatar' },
+      { id: 'leaderboard', label: 'Leaderboard', icon: Trophy, path: '/leaderboard' },
+      { id: 'spaces', label: 'Spaces', icon: Grid3X3, path: '/spaces' },
+      { id: 'marketplace', label: 'Marketplace', icon: ShoppingCart, path: '/marketplace' },
+      { id: 'settings', label: 'Settings', icon: Settings, path: '/settings' },
+    ];
+  };
+
+  const navigationItems = getNavigationItems();
 
   const handleNavigate = (path: string, disabled?: boolean): void => {
     if (!disabled) {
